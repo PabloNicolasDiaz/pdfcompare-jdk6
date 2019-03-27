@@ -16,19 +16,17 @@
  */
 package de.redsix.pdfcompare.cli;
 
-import java.util.Optional;
-
 public interface CliArguments {
 
-	Boolean areAvailable();
+	boolean areAvailable();
 
-	Boolean isHelp();
+	boolean isHelp();
 
-	Optional<String> getExpectedFile();
+	String getExpectedFile();
 
-	Optional<String> getActualFile();
+	String getActualFile();
 
-	Optional<String> getOutputFile();
+	String getOutputFile();
 
 	void printHelp();
 

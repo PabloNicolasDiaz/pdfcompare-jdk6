@@ -16,9 +16,13 @@
  */
 package de.redsix.pdfcompare.cli;
 
-import java.util.Optional;
-
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 public class CliArgumentsImpl implements CliArguments {
 
@@ -42,32 +46,32 @@ public class CliArgumentsImpl implements CliArguments {
 	}
 
 	@Override
-	public Boolean areAvailable() {
-		return commandLine.getArgList().size() == 2 && getExpectedFile().isPresent() && getActualFile().isPresent();
+	public boolean areAvailable() {
+		return commandLine.getArgList().size() == 2 && getExpectedFile() != null && getActualFile() != null;
 	}
 
 	@Override
-	public Boolean isHelp() {
+	public boolean isHelp() {
 		return commandLine.hasOption(HELP_OPTION);
 	}
 
 	@Override
-	public Optional<String> getExpectedFile() {
+	public String getExpectedFile() {
 		return getRemainingArgument(EXPECTED_FILENAME_INDEX);
 	}
 
 	@Override
-	public Optional<String> getActualFile() {
+	public String getActualFile() {
 		return getRemainingArgument(ACTUAL_FILENAME_INDEX);
 	}
 
 	@Override
-	public Optional<String> getOutputFile() {
+	public String getOutputFile() {
 		if (!commandLine.hasOption(OUTPUT_OPTION)) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(commandLine.getOptionValue(OUTPUT_OPTION));
+		return commandLine.getOptionValue(OUTPUT_OPTION);
 	}
 
 	@Override
@@ -96,11 +100,11 @@ public class CliArgumentsImpl implements CliArguments {
 		}
 	}
 
-	private Optional<String> getRemainingArgument(int index) {
+	private String getRemainingArgument(int index) {
 		if (commandLine.getArgList().isEmpty() || commandLine.getArgList().size() < index + 1) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(commandLine.getArgList().get(index));
+		return commandLine.getArgList().get(index);
 	}
 }

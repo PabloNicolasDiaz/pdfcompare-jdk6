@@ -18,6 +18,8 @@ package de.redsix.pdfcompare.cli;
 
 import java.io.IOException;
 
+import lombok.val;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +38,13 @@ public class CliComparator {
 	private static final Logger LOG = LoggerFactory.getLogger(CliComparator.class);
 
 	public CliComparator(CliArguments cliArguments) {
-		if (cliArguments.getExpectedFile().isPresent() && cliArguments.getActualFile().isPresent()) {
-			result = compare(cliArguments.getExpectedFile().get(), cliArguments.getActualFile().get());
-
-			if (cliArguments.getOutputFile().isPresent()) {
-				compareResult.writeTo(cliArguments.getOutputFile().get());
+		val expectedFile = cliArguments.getExpectedFile();
+		val actualFile = cliArguments.getActualFile();
+		if (expectedFile != null && actualFile != null) {
+			result = compare(expectedFile, actualFile);
+			val outputFile = cliArguments.getOutputFile();
+			if (outputFile != null) {
+				compareResult.writeTo(outputFile);
 			}
 		}
 	}
@@ -51,9 +55,8 @@ public class CliComparator {
 
 	private int compare(String expectedFile, String actualFile) {
 		try {
-			compareResult = new PdfComparator<>(expectedFile, actualFile, new CompareResultWithExpectedAndActual())
-					.compare();
-
+			compareResult = new PdfComparator<CompareResultWithExpectedAndActual>(expectedFile, actualFile,
+					new CompareResultWithExpectedAndActual()).compare();
 			return (compareResult.isEqual()) ? EQUAL_DOCUMENTS_RESULT_VALUE : UNEQUAL_DOCUMENTS_RESULT_VALUE;
 		} catch (IOException ex) {
 			LOG.error(ex.getMessage());

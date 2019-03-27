@@ -27,14 +27,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import lombok.Cleanup;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.Environment;
 
@@ -46,32 +46,43 @@ import de.redsix.pdfcompare.env.Environment;
  */
 public class CompareResultImpl implements ResultCollector, CompareResult {
 
-	private static final Logger LOG = LoggerFactory.getLogger(CompareResultImpl.class);
 	protected Environment environment;
 	protected final Map<Integer, ImageWithDimension> diffImages = new TreeMap<Integer, ImageWithDimension>();
 	protected boolean isEqual = true;
 	protected boolean hasDifferenceInExclusion = false;
 	private boolean expectedOnly;
 	private boolean actualOnly;
-	private Collection<PageArea> diffAreas = new ArrayList<>();
+	private Collection<PageArea> diffAreas = new ArrayList<PageArea>();
 	private int pages = 0;
 
 	@Override
-	public boolean writeTo(String filename) {
-		return writeTo(doc -> doc.save(filename + ".pdf"));
+	public boolean writeTo(final String filename) {
+		return writeTo(new ThrowingConsumer<PDDocument, IOException>() {
+			@Override
+			public void accept(PDDocument doc) throws IOException {
+				doc.save(filename + ".pdf");
+			}
+		});
 	}
 
 	@Override
 	public boolean writeTo(final OutputStream outputStream) {
 		notNull(outputStream, "OutputStream must not be null");
-		final boolean result = writeTo(doc -> doc.save(outputStream));
+		final boolean result = writeTo(new ThrowingConsumer<PDDocument, IOException>() {
+			@Override
+			public void accept(PDDocument doc) throws IOException {
+				doc.save(outputStream);
+			}
+		});
 		silentlyCloseOutputStream(outputStream);
 		return result;
 	}
 
 	private boolean writeTo(ThrowingConsumer<PDDocument, IOException> saver) {
 		if (hasImages()) {
-			try (PDDocument document = new PDDocument()) {
+			try {
+				@Cleanup
+				PDDocument document = new PDDocument();
 				addImagesToDocument(document);
 				saver.accept(document);
 			} catch (IOException e) {
@@ -85,7 +96,7 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 		try {
 			outputStream.close();
 		} catch (IOException e) {
-			LOG.info("Could not close OutputStream", e);
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -118,9 +129,10 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 		PDPage page = new PDPage(new PDRectangle(image.width, image.height));
 		document.addPage(page);
 		final PDImageXObject imageXObject = LosslessFactory.createFromImage(document, image.bufferedImage);
-		try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-			contentStream.drawImage(imageXObject, 0, 0, image.width, image.height);
-		}
+		@Cleanup
+		PDPageContentStream contentStream = new PDPageContentStream(document, page);
+		contentStream.drawImage(imageXObject, 0, 0, image.width, image.height);
+
 	}
 
 	protected boolean keepImages() {
