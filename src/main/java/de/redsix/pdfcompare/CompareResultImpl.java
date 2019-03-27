@@ -19,16 +19,13 @@ package de.redsix.pdfcompare;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
-import lombok.Cleanup;
-import lombok.val;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -36,6 +33,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.Environment;
 
@@ -47,43 +46,64 @@ import de.redsix.pdfcompare.env.Environment;
  */
 public class CompareResultImpl implements ResultCollector, CompareResult {
 
+	private static final Logger LOG = LoggerFactory.getLogger(CompareResultImpl.class);
 	protected Environment environment;
 	protected final Map<Integer, ImageWithDimension> diffImages = new TreeMap<Integer, ImageWithDimension>();
 	protected boolean isEqual = true;
 	protected boolean hasDifferenceInExclusion = false;
 	private boolean expectedOnly;
 	private boolean actualOnly;
-	private Collection<PageArea> diffAreas = new ArrayList<PageArea>();
+	private Collection<PageArea> diffAreas = new ArrayList<>();
+	private int pages = 0;
 
 	@Override
 	public boolean writeTo(String filename) {
-		if (!hasImages()) {
-			return isEqual;
-		}
-		try {
-			@Cleanup
-			val document = new PDDocument();
-			addImagesToDocument(document);
-			document.save(filename + ".pdf");
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		return writeTo(doc -> doc.save(filename + ".pdf"));
+	}
+
+	@Override
+	public boolean writeTo(final OutputStream outputStream) {
+		notNull(outputStream, "OutputStream must not be null");
+		final boolean result = writeTo(doc -> doc.save(outputStream));
+		silentlyCloseOutputStream(outputStream);
+		return result;
+	}
+
+	private boolean writeTo(ThrowingConsumer<PDDocument, IOException> saver) {
+		if (hasImages()) {
+			try (PDDocument document = new PDDocument()) {
+				addImagesToDocument(document);
+				saver.accept(document);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 		return isEqual;
 	}
 
+	private void silentlyCloseOutputStream(final OutputStream outputStream) {
+		try {
+			outputStream.close();
+		} catch (IOException e) {
+			LOG.info("Could not close OutputStream", e);
+		}
+	}
+
 	/**
 	 * checks, whether this CompareResult has stored images.
+	 *
+	 * @return true, when images are stored in this CompareResult
 	 */
-	protected boolean hasImages() {
+	protected synchronized boolean hasImages() {
 		return !diffImages.isEmpty();
 	}
 
-	protected void addImagesToDocument(final PDDocument document) throws IOException {
+	protected synchronized void addImagesToDocument(final PDDocument document) throws IOException {
 		addImagesToDocument(document, diffImages);
 	}
 
-	protected void addImagesToDocument(final PDDocument document, final Map<Integer, ImageWithDimension> images)
-			throws IOException {
+	protected synchronized void addImagesToDocument(final PDDocument document,
+			final Map<Integer, ImageWithDimension> images) throws IOException {
 		final Iterator<Entry<Integer, ImageWithDimension>> iterator = images.entrySet().iterator();
 		while (iterator.hasNext()) {
 			final Entry<Integer, ImageWithDimension> entry = iterator.next();
@@ -98,9 +118,9 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 		PDPage page = new PDPage(new PDRectangle(image.width, image.height));
 		document.addPage(page);
 		final PDImageXObject imageXObject = LosslessFactory.createFromImage(document, image.bufferedImage);
-		@Cleanup
-		val contentStream = new PDPageContentStream(document, page);
-		contentStream.drawImage(imageXObject, 0, 0, image.width, image.height);
+		try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+			contentStream.drawImage(imageXObject, 0, 0, image.width, image.height);
+		}
 	}
 
 	protected boolean keepImages() {
@@ -120,6 +140,7 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 			diffAreas.add(diffCalculator.getDiffArea());
 		}
 		diffImages.put(pageIndex, diffImage);
+		pages++;
 	}
 
 	@Override
@@ -157,11 +178,9 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 		return expectedOnly || actualOnly;
 	}
 
-	public synchronized int getNumberOfPages() {
-		if (!hasImages()) {
-			return 0;
-		}
-		return Collections.max(diffImages.keySet());
+	@Override
+	public int getNumberOfPages() {
+		return pages;
 	}
 
 	@Override
@@ -183,7 +202,6 @@ public class CompareResultImpl implements ResultCollector, CompareResult {
 
 	@Override
 	public void done() {
-		// TODO Auto-generated method stub
 
 	}
 }

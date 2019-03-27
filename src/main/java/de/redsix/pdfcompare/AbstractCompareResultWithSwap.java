@@ -20,14 +20,14 @@ import static de.redsix.pdfcompare.Utilities.blockingExecutor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.io.OutputStream;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import lombok.Cleanup;
 import lombok.val;
+import lombok.var;
 
 import org.apache.commons.io.filefilter.NameFileFilter;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
@@ -60,18 +60,32 @@ public abstract class AbstractCompareResultWithSwap extends CompareResultImpl {
 		if (!swapped) {
 			return super.writeTo(filename);
 		}
+		val mergerUtility = new PDFMergerUtility();
+		mergerUtility.setDestinationFileName(filename + ".pdf");
+		return writeTo(mergerUtility);
+	}
+
+	@Override
+	public boolean writeTo(final OutputStream outputStream) {
+		if (!swapped) {
+			return super.writeTo(outputStream);
+		}
+		final PDFMergerUtility mergerUtility = new PDFMergerUtility();
+		mergerUtility.setDestinationStream(outputStream);
+		return writeTo(mergerUtility);
+	}
+
+	private boolean writeTo(final PDFMergerUtility mergerUtility) {
 		swapToDisk();
 		Utilities.shutdownAndAwaitTermination(swapExecutor, "Swap");
 		try {
 			LOG.trace("Merging...");
-			Instant start = Instant.now();
-			final PDFMergerUtility mergerUtility = new PDFMergerUtility();
-			mergerUtility.setDestinationFileName(filename + ".pdf");
+			val start = Instant.now();
 			for (val path : FileUtils.getPaths(getTempDir(), "partial_*")) {
 				mergerUtility.addSource(path);
 			}
 			mergerUtility.mergeDocuments(Utilities.getMemorySettings(environment.getMergeCacheSize()));
-			Instant end = Instant.now();
+			val end = Instant.now();
 			LOG.trace("Merging took: " + new Duration(start, end).getMillis() + "ms");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -110,10 +124,10 @@ public abstract class AbstractCompareResultWithSwap extends CompareResultImpl {
 	private synchronized void swapToDisk() {
 		if (!diffImages.isEmpty()) {
 			val images = new TreeMap<Integer, ImageWithDimension>();
-			final Iterator<Entry<Integer, ImageWithDimension>> iterator = diffImages.entrySet().iterator();
-			int previousPage = diffImages.keySet().iterator().next();
+			val iterator = diffImages.entrySet().iterator();
+			var previousPage = diffImages.keySet().iterator().next();
 			while (iterator.hasNext()) {
-				final Entry<Integer, ImageWithDimension> entry = iterator.next();
+				val entry = iterator.next();
 				if (entry.getKey() <= previousPage + 1) {
 					images.put(entry.getKey(), entry.getValue());
 					iterator.remove();

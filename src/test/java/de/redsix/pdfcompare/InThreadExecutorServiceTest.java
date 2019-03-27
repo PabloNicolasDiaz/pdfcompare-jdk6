@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import lombok.val;
+
 import org.junit.jupiter.api.Test;
 
 import de.redsix.pdfcompare.InThreadExecutorService.ImmediateFuture;
@@ -37,13 +39,13 @@ public class InThreadExecutorServiceTest {
 
 	@Test
 	public void immediateFutureWithResult() throws ExecutionException, InterruptedException {
-		final ImmediateFuture future = new ImmediateFuture<>("Test");
+		val future = new ImmediateFuture<>("Test");
 		assertThat(future.get(), is("Test"));
 	}
 
 	@Test
 	public void immediateFutureWithException() throws ExecutionException, InterruptedException {
-		final ImmediateFuture future = new ImmediateFuture(new Exception());
+		val future = new ImmediateFuture<Object>(new Exception());
 		assertThrows(Exception.class, () -> future.get());
 	}
 }

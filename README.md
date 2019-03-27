@@ -24,11 +24,19 @@ Just include it as dependency. Please check for the most current version availab
 
 ### Simple Usage
 
-There is a simple interactive UI, when you start the Class de.redsix.pdfcompare.ui.DisplayMain.
+There is a simple interactive UI, when you start the Class de.redsix.pdfcompare.Main 
+without any additional arguments. Next to the UI you can provide an expected and actual 
+file as well as an optional result file by CLI.
+```
+usage: java -jar pdfcompare-x.x.x.jar [EXPECTED] [ACTUAL]
+ -h,--help              Displays this text and exit
+ -o,--output <output>   Provide an optional output file for the result
+```
+
 But the focus of PdfCompare is on embedded usage as a library.
 
 ```java
-new PdfComparator("expected.pdf", "actual.pdf").compare().writeTo("diffOutput.pdf");
+new PdfComparator("expected.pdf", "actual.pdf").compare().writeTo("diffOutput");
 ```
 This will produce an output PDF which may include markings for differences found.
 Pixels that are equal are faded a bit. Pixels that differ are marked in red and green.
@@ -56,7 +64,7 @@ result.getDifferences(); // returns page areas, where differences were found
 ```
 For convenience, writeTo also returns the equals status:
 ```java
-boolean isEquals = new PdfComparator("expected.pdf", "actual.pdf").compare().writeTo("diffOutput.pdf");
+boolean isEquals = new PdfComparator("expected.pdf", "actual.pdf").compare().writeTo("diffOutput");
 if (!isEquals) {
     System.out.println("Differences found!");
 }
