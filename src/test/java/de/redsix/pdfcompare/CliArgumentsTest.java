@@ -21,10 +21,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import lombok.val;
+
 import org.junit.jupiter.api.Test;
 
 import de.redsix.pdfcompare.cli.CliArgumentsImpl;
-import lombok.val;
 
 public class CliArgumentsTest {
 
