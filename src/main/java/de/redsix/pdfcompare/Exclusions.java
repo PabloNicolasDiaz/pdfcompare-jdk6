@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 Malte Finsterwalder
+ * Copyright [2018] Pablo Nicolas Diaz Bilotto [https://github.com/PabloNicolasDiaz/]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.redsix.pdfcompare;
 
 import static de.redsix.pdfcompare.PdfComparator.DPI;
@@ -13,6 +29,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.Cleanup;
+import lombok.val;
+
 import org.apache.commons.io.Charsets;
 
 import com.typesafe.config.Config;
@@ -21,9 +40,6 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
-
-import lombok.Cleanup;
-import lombok.val;
 
 public class Exclusions {
 
@@ -44,7 +60,7 @@ public class Exclusions {
 				val x = new PageExclusions(exclusionsForAllPages);
 				x.add(exclusion);
 				exclusionsPerPage.put(exclusion.page, x);
-			} 
+			}
 		}
 		return this;
 	}

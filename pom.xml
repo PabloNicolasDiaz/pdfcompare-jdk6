@@ -1,18 +1,20 @@
-<!-- ~ Copyright 2016 Malte Finsterwalder ~ ~ Licensed under the Apache License, 
-	Version 2.0 (the "License"); ~ you may not use this file except in compliance 
-	with the License. ~ You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
-	~ ~ Unless required by applicable law or agreed to in writing, software ~ 
-	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
-	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
-	License for the specific language governing permissions and ~ limitations 
-	under the License. -->
+<!-- ~ Copyright 2016 Malte Finsterwalder ~ 
+	 ~ Copyright 2019 Pablo Nicolas Diaz Bilotto ~ 
+     ~ Licensed under the Apache License, 
+	 Version 2.0 (the "License"); ~ you may not use this file except in compliance 
+	 with the License. ~ You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
+	 ~ ~ Unless required by applicable law or agreed to in writing, software ~ 
+	 distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
+	 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
+	 License for the specific language governing permissions and ~ limitations 
+	 under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.pablonicolasdiaz</groupId>
 	<artifactId>pdfcompare</artifactId>
-	<version>1.1.38-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>PdfCompare</name>
 	<url>https://github.com/PabloNicolasDiaz/pdfcompare</url>
 	<description>A simple Java library to compare two PDF files. Files are rendered and compared pixel by pixel. Pablo Nicolas Diaz Fork</description>
@@ -26,14 +28,10 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.projectlombok.lombok.version>1.18.6</org.projectlombok.lombok.version>
+		<spotless.version>1.20.0</spotless.version>
 		<junit-minor.version>4.0</junit-minor.version>
 		<junit.version>5.${junit-minor.version}</junit.version>
 	</properties>
-
-	<organization>
-		<name>red6 enterprise software GmbH</name>
-		<url>http://redsix.de</url>
-	</organization>
 
 	<licenses>
 		<license>
@@ -58,12 +56,12 @@
 	</developers>
 
 	<dependencies>
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>2.0.14</version>
-        </dependency>
- 		<dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.14</version>
+		</dependency>
+		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
 			<version>1.2.1</version>
@@ -142,7 +140,7 @@
 		<url>https://github.com/PabloNicolasDiaz/pdfcompare.git</url>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -219,7 +217,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
@@ -240,9 +237,36 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>${spotless.version}</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<java>
+						<licenseHeader>
+							<file>${basedir}/spotless.license_java</file>
+						</licenseHeader>
+						<eclipse>
+							<file>${basedir}/spotless.eclipseformat.xml</file>
+							<version>4.7.1</version>
+						</eclipse>
+						<trimTrailingWhitespace />
+						<importOrder>
+							<file>${basedir}/spotless.importorder</file>
+						</importOrder>
+					</java>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
 	<profiles>
 		<profile>
 			<id>ossrh</id>
@@ -262,7 +286,6 @@
 							<autoReleaseAfterClose>true</autoReleaseAfterClose>
 						</configuration>
 					</plugin>
-
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-release-plugin</artifactId>
@@ -294,7 +317,6 @@
 							</execution>
 						</executions>
 					</plugin>
-
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
@@ -308,7 +330,6 @@
 							</execution>
 						</executions>
 					</plugin>
-
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>

@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 Malte Finsterwalder
+ * Copyright [2018] Pablo Nicolas Diaz Bilotto [https://github.com/PabloNicolasDiaz/]
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +22,27 @@ import java.time.Instant;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 
 //        String file1 = "expected.pdf";
 //        String file2 = "actual.pdf";
 //        String file1 = "/home/malte/projects/Testcases/HML/DirektRente/8257926_1/8257926_1_004.pdf";
 //        String file2 = "/home/malte/projects/Testcases/HML/DirektRente/8257926_1/x.pdf";
-        String file1 = "/home/malte/long_chethan.pdf";
-        String file2 = "/home/malte/long_chethan_2.pdf";
+		String file1 = "/home/malte/long_chethan.pdf";
+		String file2 = "/home/malte/long_chethan_2.pdf";
 
 //        CompareResult result = null;
 
-        for (int i = 0; i < 1; i++) {
-            Instant start = Instant.now();
+		for (int i = 0; i < 1; i++) {
+			Instant start = Instant.now();
 //            final CompareResult result = new DiskUsingCompareResult();
-            final CompareResultImpl result = new CompareResultWithPageOverflow();
-            new PdfComparator(file1, file2, result)
-//                    .withIgnore("ignore.conf")
-                    .compare().writeTo("out");
-            Instant end = Instant.now();
-            System.out.println("Duration: " + Duration.between(start, end).toMillis() + "ms");
-        }
+			final CompareResultImpl result = new CompareResultWithPageOverflow();
+			new PdfComparator(file1, file2, result)
+					// .withIgnore("ignore.conf")
+					.compare().writeTo("out");
+			Instant end = Instant.now();
+			System.out.println("Duration: " + Duration.between(start, end).toMillis() + "ms");
+		}
 //        printMemory("finished");
 //        if (result.isNotEqual()) {
 //            System.out.println("Differences found!");
@@ -56,27 +57,26 @@ public class Main {
 //            System.out.println("Differences found!");
 //        }
 //        result2.writeTo("test");
-    }
+	}
 
+	private static long oldTotal;
+	private static long oldFree;
 
-    private static long oldTotal;
-    private static long oldFree;
+	public static void printMemory(final String s) {
+		final long totalMemory = Runtime.getRuntime().totalMemory();
+		final long freeMemory = Runtime.getRuntime().freeMemory();
+		final long consumed = totalMemory - freeMemory;
+		System.out.println("==========================================================================");
+		System.out.println("Memory " + s);
+		System.out.printf("Total Memory: %6dMB  |  %d\n", toMB(totalMemory), toMB(totalMemory - oldTotal));
+		System.out.printf("Free Memory:  %6dMB  |  %d\n", toMB(freeMemory), toMB(freeMemory - oldFree));
+		System.out.printf("Consumed:     %6dMB  |  %d\n", toMB(consumed), toMB(consumed - (oldTotal - oldFree)));
+		System.out.println("==========================================================================");
+		oldTotal = totalMemory;
+		oldFree = freeMemory;
+	}
 
-    public static void printMemory(final String s) {
-        final long totalMemory = Runtime.getRuntime().totalMemory();
-        final long freeMemory = Runtime.getRuntime().freeMemory();
-        final long consumed = totalMemory - freeMemory;
-        System.out.println("==========================================================================");
-        System.out.println("Memory " + s);
-        System.out.printf("Total Memory: %6dMB  |  %d\n", toMB(totalMemory), toMB(totalMemory - oldTotal));
-        System.out.printf("Free Memory:  %6dMB  |  %d\n", toMB(freeMemory), toMB(freeMemory - oldFree));
-        System.out.printf("Consumed:     %6dMB  |  %d\n", toMB(consumed), toMB(consumed - (oldTotal - oldFree)));
-        System.out.println("==========================================================================");
-        oldTotal = totalMemory;
-        oldFree = freeMemory;
-    }
-
-    private static long toMB(final long memory) {
-        return memory / (1024 * 1024);
-    }
+	private static long toMB(final long memory) {
+		return memory / (1024 * 1024);
+	}
 }

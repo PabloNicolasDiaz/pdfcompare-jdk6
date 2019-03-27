@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 Malte Finsterwalder
+ * Copyright [2018] Pablo Nicolas Diaz Bilotto [https://github.com/PabloNicolasDiaz/]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.redsix.pdfcompare;
 
 import java.io.File;
@@ -12,6 +28,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.Cleanup;
+import lombok.val;
+
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -19,8 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.Environment;
-import lombok.Cleanup;
-import lombok.val;
 
 public class Utilities {
 
@@ -60,7 +77,8 @@ public class Utilities {
 			int queueCapacity, Environment environment) {
 		if (environment.useParallelProcessing()) {
 			return new ThreadPoolExecutor(coreThreads, maxThreads, 3, TimeUnit.MINUTES,
-					new LinkedBlockingQueue<Runnable>(queueCapacity), new NamedThreadFactory(name), new BlockingHandler());
+					new LinkedBlockingQueue<Runnable>(queueCapacity), new NamedThreadFactory(name),
+					new BlockingHandler());
 		} else {
 			return new InThreadExecutorService();
 		}
@@ -70,7 +88,8 @@ public class Utilities {
 			Environment environment) {
 		if (environment.useParallelProcessing()) {
 			return new ThreadPoolExecutor(threads, threads, 0, TimeUnit.MINUTES,
-					new LinkedBlockingQueue<Runnable>(queueCapacity), new NamedThreadFactory(name), new BlockingHandler());
+					new LinkedBlockingQueue<Runnable>(queueCapacity), new NamedThreadFactory(name),
+					new BlockingHandler());
 		} else {
 			return new InThreadExecutorService();
 		}
@@ -107,7 +126,7 @@ public class Utilities {
 
 	public static int getNumberOfPages(final File document, Environment environment) throws IOException {
 		@Cleanup
-		val documentIS =  new FileInputStream(document);
+		val documentIS = new FileInputStream(document);
 		return getNumberOfPages(documentIS, environment);
 
 	}
@@ -124,7 +143,7 @@ public class Utilities {
 		val documentIS = new FileInputStream(document);
 		return renderPage(documentIS, page, environment);
 	}
-	
+
 	public static ImageWithDimension renderPage(final InputStream documentIS, final int page, Environment environment)
 			throws IOException {
 		@Cleanup

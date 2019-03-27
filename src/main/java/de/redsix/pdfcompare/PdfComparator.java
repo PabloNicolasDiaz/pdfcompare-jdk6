@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 Malte Finsterwalder
+ * Copyright [2018] Pablo Nicolas Diaz Bilotto [https://github.com/PabloNicolasDiaz/]
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +35,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.val;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -43,16 +48,13 @@ import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.DefaultEnvironment;
 import de.redsix.pdfcompare.env.Environment;
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-import lombok.val;
 
 public class PdfComparator<T extends CompareResultImpl> {
 
 	private static interface Supplier<T> {
 		public T get();
 	}
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(PdfComparator.class);
 	public static final int DPI = 300;
 	private static final int EXTRA_RGB = new Color(0, 160, 0).getRGB();
