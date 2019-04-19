@@ -1,19 +1,32 @@
-#sudo: required
-
 language: java
-script:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn -B deploy --settings .travis-settings.xml || mvn -B verify --settings .travis-settings.xml'
 jdk:
-  - oraclejdk11
-  
+- oraclejdk11
+script: mvn clean deploy --settings .travis-settings.xml -DskipTests=true -B -U -Prelease
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-  - rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/
-
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+- rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/
 cache:
   directories:
-  - $HOME/.gradle/caches/
-  - $HOME/.gradle/wrapper/
-  - $HOME/.m2/
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+  - "$HOME/.m2/"
   - plugin-maven/build/localMavenRepository/
+before_install:
+- echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
+- echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
+install: mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
+before_deploy:
+- mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
+- export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
+deploy:
+  provider: releases
+  api_key:
+    secure: HC/SixeT3YMaYPZUyBaIKGR+Hx0ADbEFXCZ/fXz2e8UuuvWSZ9eUeVQvfhLefi8xmKkhAwYr8kdFGKpSjBmFaaPA5pfXiEkNSZyo9j0C8Ha6hkK7UCMbElLi+J6NSxAO1Q6lp2Dcr9fEzYOBkRnLDnqxbpmDaTDqBKs88Xkqbp5OqvUmDhoKbXqNPFnqVnz52VwfVAgnArpR1z8+gwsSr0KiZpJo2A25nQwg14ZaTPLFzsVZXiwwh3PAxMMM62uW2BPmKzavgTK7JKlmiuMDCqzVKS0cR60svRyRFW46uT0/6BCa74B72ugeYKpa/atGCuTM0IjSdXn7LQrBriCVwD9dMpTGF1pOn83DgbtUs/iA/4L8EgW9dv+YtniRbZqzCCf+KjMbgYOWDAl45YrX9TFIqDCbUYEwqMS0Er/6ws/X0hJGXdQMqepMaQUgXVQcEaJ8AzgFzR8FoSKbwgDE2krknE9qjGIHL09PupxOrwHoQi3FMSdZCia349cM36k6HlDpNW/ayJbrJzI/dIUlJeoRTxRMdNiL3GJ4I/7IQpLF0t4b40NoDyGjezMHXMz82WegSwe2Bi0ZrKxQy0PnFRAL0CC6RgZHtnEMf/1D5837ioyXPlngRLyPxb1Ie03DJ39vytGqnL5LDOOrFngjgzl1j98EF3gs/2Tib8oSlBA=
+  file: pdfcompare/target/pdfcompare-jdk6-$project_version.jar
+  skip_cleanup: true
+  name: $project_version
+  on:
+    repo: PabloNicolasDiaz/pdfcompare
+  draft: true
+
