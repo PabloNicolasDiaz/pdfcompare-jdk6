@@ -349,7 +349,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.10.4</version>
+						<version>3.1.10</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
@@ -358,7 +358,8 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
+						<configuration>							
+							<source>${maven.compiler.source}</source>
 							<sourcepath>${delombok.output}</sourcepath>
 						</configuration>
 					</plugin>
