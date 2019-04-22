@@ -30,6 +30,7 @@
 		<spotless.version>1.20.0</spotless.version>
 		<junit-minor.version>4.0</junit-minor.version>
 		<junit.version>5.${junit-minor.version}</junit.version>
+		<delombok.output>${project.build.directory}/generated-sources/delombok</delombok.output>
 	</properties>
 
 	<licenses>
