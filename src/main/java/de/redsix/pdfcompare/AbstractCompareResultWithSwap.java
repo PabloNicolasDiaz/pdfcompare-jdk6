@@ -25,10 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
-import lombok.Cleanup;
-import lombok.val;
-import lombok.var;
-
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.io.filefilter.NameFileFilter;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -38,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.Environment;
+import lombok.Cleanup;
+import lombok.val;
 
 /**
  * This CompareResult monitors the memory the JVM consumes through
@@ -125,7 +124,7 @@ public abstract class AbstractCompareResultWithSwap extends CompareResultImpl {
 		if (!diffImages.isEmpty()) {
 			val images = new TreeMap<Integer, ImageWithDimension>();
 			val iterator = diffImages.entrySet().iterator();
-			var previousPage = diffImages.keySet().iterator().next();
+			int previousPage = IterableUtils.get(diffImages.keySet(),0).intValue();
 			while (iterator.hasNext()) {
 				val entry = iterator.next();
 				if (entry.getKey() <= previousPage + 1) {
