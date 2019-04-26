@@ -1,7 +1,10 @@
 language: java
 jdk:
 - oraclejdk11
-script: mvn clean deploy --settings .travis-settings.xml -DskipTests=true -B -U -Prelease,ossrh
+before_script:
+- echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
+- echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
+script: mvn clean deploy --settings .travis-settings.xml -B -U -Prelease,ossrh
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -12,10 +15,6 @@ cache:
   - "$HOME/.gradle/wrapper/"
   - "$HOME/.m2/"
   - plugin-maven/build/localMavenRepository/
-before_install:
-- echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
-- echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
-install: mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 before_deploy:
 - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
 - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
@@ -27,6 +26,7 @@ deploy:
   skip_cleanup: true
   name: $project_version
   on:
+    tags: true 
     repo: PabloNicolasDiaz/pdfcompare
   draft: true
 
