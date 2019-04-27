@@ -17,15 +17,14 @@ cache:
   - plugin-maven/build/localMavenRepository/
 before_deploy:
 - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
-- export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
+- export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep
+  -v '\[')
 deploy:
   provider: releases
   api_key:
-    secure: HC/SixeT3YMaYPZUyBaIKGR+Hx0ADbEFXCZ/fXz2e8UuuvWSZ9eUeVQvfhLefi8xmKkhAwYr8kdFGKpSjBmFaaPA5pfXiEkNSZyo9j0C8Ha6hkK7UCMbElLi+J6NSxAO1Q6lp2Dcr9fEzYOBkRnLDnqxbpmDaTDqBKs88Xkqbp5OqvUmDhoKbXqNPFnqVnz52VwfVAgnArpR1z8+gwsSr0KiZpJo2A25nQwg14ZaTPLFzsVZXiwwh3PAxMMM62uW2BPmKzavgTK7JKlmiuMDCqzVKS0cR60svRyRFW46uT0/6BCa74B72ugeYKpa/atGCuTM0IjSdXn7LQrBriCVwD9dMpTGF1pOn83DgbtUs/iA/4L8EgW9dv+YtniRbZqzCCf+KjMbgYOWDAl45YrX9TFIqDCbUYEwqMS0Er/6ws/X0hJGXdQMqepMaQUgXVQcEaJ8AzgFzR8FoSKbwgDE2krknE9qjGIHL09PupxOrwHoQi3FMSdZCia349cM36k6HlDpNW/ayJbrJzI/dIUlJeoRTxRMdNiL3GJ4I/7IQpLF0t4b40NoDyGjezMHXMz82WegSwe2Bi0ZrKxQy0PnFRAL0CC6RgZHtnEMf/1D5837ioyXPlngRLyPxb1Ie03DJ39vytGqnL5LDOOrFngjgzl1j98EF3gs/2Tib8oSlBA=
+    secure: ffIhmh5vNU2l6+GLMHzDsHwANJ/rD1zJLkeL+cVLALGYysiznCid+xPIb5hZX54P2UbptF3Ps44sKR/4HpdOpawjxktB3IXaCNHSz8g1XEXBx+k0p5eoYh4SEu8KpoQ4G3DSg5SG+ScCKSDo2eInwAxjcwkN6hkEzvd5mCZOQnC51Apx8nc40hokoqtrgFCYpRuPRdLjc1HK/zRMPRxdIM30uMVGagYwhmb/8vEn81vCHEw6qXUZm/h/TvUapXrN7d3OzU+q1MO7KS5pz0/bXRTwMRG35Wcxm8q+6uVXB5omXRz5ZkFkCx/XGW7muwqEd89REKrUWs40GNpE5xZloIVV5VclwrNrCVoO3cU1NmRo6mcE6WP4x6x/CcgyxhDoB0yA1WHsjgjVXJQiV9Or/WnEkCQ0LSMmDZnMfbIPtpBa4ODoL+XM3qqnKF0j6x9MrWcIL7vesMWgQP2dO1u7GftKAK3FNJJcisrcWrb8vME5Mgw4gMks04k2gHlkbT3z0vML6iyT6RLqs8bAGAq90DJWrH+2JTIXCeuDy7LeoGKaczmxGzZHOPZvPLZB99cjAj20bU8aNABFfMni6D+9vXWgXC4bB+rx4KJCGYcP7pvyfkuGc5hT3Vz1NrH3Z/Qrhb1Krs1NuajV60Mtt55bJ6fyRPwgZtL8uQ7cYIkCThs=
   file: pdfcompare-jdk6/target/pdfcompare-jdk6-$project_version.jar
+  draft: true 
   skip_cleanup: true
-  name: $project_version
   on:
     repo: PabloNicolasDiaz/pdfcompare-jdk6
-  draft: true
-
