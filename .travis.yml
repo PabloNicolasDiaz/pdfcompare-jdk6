@@ -22,7 +22,7 @@ deploy:
   provider: releases
   api_key:
     secure: HC/SixeT3YMaYPZUyBaIKGR+Hx0ADbEFXCZ/fXz2e8UuuvWSZ9eUeVQvfhLefi8xmKkhAwYr8kdFGKpSjBmFaaPA5pfXiEkNSZyo9j0C8Ha6hkK7UCMbElLi+J6NSxAO1Q6lp2Dcr9fEzYOBkRnLDnqxbpmDaTDqBKs88Xkqbp5OqvUmDhoKbXqNPFnqVnz52VwfVAgnArpR1z8+gwsSr0KiZpJo2A25nQwg14ZaTPLFzsVZXiwwh3PAxMMM62uW2BPmKzavgTK7JKlmiuMDCqzVKS0cR60svRyRFW46uT0/6BCa74B72ugeYKpa/atGCuTM0IjSdXn7LQrBriCVwD9dMpTGF1pOn83DgbtUs/iA/4L8EgW9dv+YtniRbZqzCCf+KjMbgYOWDAl45YrX9TFIqDCbUYEwqMS0Er/6ws/X0hJGXdQMqepMaQUgXVQcEaJ8AzgFzR8FoSKbwgDE2krknE9qjGIHL09PupxOrwHoQi3FMSdZCia349cM36k6HlDpNW/ayJbrJzI/dIUlJeoRTxRMdNiL3GJ4I/7IQpLF0t4b40NoDyGjezMHXMz82WegSwe2Bi0ZrKxQy0PnFRAL0CC6RgZHtnEMf/1D5837ioyXPlngRLyPxb1Ie03DJ39vytGqnL5LDOOrFngjgzl1j98EF3gs/2Tib8oSlBA=
-  file: pdfcompare/target/pdfcompare-jdk6-$project_version.jar
+  file: pdfcompare-jdk6/target/pdfcompare-jdk6-$project_version.jar
   skip_cleanup: true
   name: $project_version
   on:
