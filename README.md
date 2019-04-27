@@ -1,8 +1,8 @@
 # PdfCompare  
 
-[![Build Status](https://travis-ci.org/PabloNicolasDiaz/pdfcompare.svg?branch=master)](https://travis-ci.org/PabloNicolasDiaz/pdfcompare) 
-[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.pablonicolasdiaz/pdfcompare.svg)](http://search.maven.org/#search|gav|1|g:"io.github.pablonicolasdiaz"%20AND%20a:"pdfcompare")
-[![DepShield Badge](https://depshield.sonatype.org/badges/PabloNicolasDiaz/pdfcompare/depshield.svg)](https://depshield.github.io)
+[![Build Status](https://travis-ci.org/PabloNicolasDiaz/pdfcompare-jdk6.svg?branch=master)](https://travis-ci.org/PabloNicolasDiaz/pdfcompare-jdk6) 
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.PabloNicolasDiaz/pdfcompare-jdk6.svg)](http://search.maven.org/#search|gav|1|g:"io.github.pablonicolasdiaz"%20AND%20a:"pdfcompare")
+[![DepShield Badge](https://depshield.sonatype.org/badges/PabloNicolasDiaz/pdfcompare-jdk6/depshield.svg)](https://depshield.github.io)
 
 A simple Java library to compare two PDF files.
 Files are rendered and compared pixel by pixel.
@@ -16,7 +16,7 @@ Just include it as dependency. Please check for the most current version availab
 <dependencies>
   <dependency>
     <groupId>io.github.pablonicolasdiaz</groupId>
-    <artifactId>pdfcompare</artifactId>
+    <artifactId>pdfcompare-jdk6</artifactId>
     <version>...</version> <!-- see current version in the maven central tag above -->
   </dependency>
 </dependencies>
@@ -28,7 +28,7 @@ There is a simple interactive UI, when you start the Class de.redsix.pdfcompare.
 without any additional arguments. Next to the UI you can provide an expected and actual 
 file as well as an optional result file by CLI.
 ```
-usage: java -jar pdfcompare-x.x.x.jar [EXPECTED] [ACTUAL]
+usage: java -jar pdfcompare-jdk6-x.x.x.jar [EXPECTED] [ACTUAL]
  -h,--help              Displays this text and exit
  -o,--output <output>   Provide an optional output file for the result
 ```

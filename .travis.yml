@@ -27,6 +27,6 @@ deploy:
   name: $project_version
   on:
     tags: true 
-    repo: PabloNicolasDiaz/pdfcompare
+    repo: PabloNicolasDiaz/pdfcompare-jdk6
   draft: true
 
