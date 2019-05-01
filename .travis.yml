@@ -4,7 +4,7 @@ jdk:
 before_script:
 - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
 - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
-script: mvn clean deploy --settings .travis-settings.xml -B -U -Prelease,ossrh
+script: [ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn -B deploy --settings .travis-settings.xml || mvn -B verify --settings .travis-settings.xml
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -26,5 +26,7 @@ deploy:
   file: pdfcompare-jdk6/target/pdfcompare-jdk6-$project_version.jar
   draft: true 
   skip_cleanup: true
+  name: $project_version
   on:
+    tags: true 
     repo: PabloNicolasDiaz/pdfcompare-jdk6
