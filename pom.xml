@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.pablonicolasdiaz</groupId>
 	<artifactId>pdfcompare-jdk6</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<name>PdfCompare</name>
 	<url>https://github.com/PabloNicolasDiaz/pdfcompare-jdk6</url>
 	<description>A simple Java library to compare two PDF files. Files are rendered and compared pixel by pixel. Pablo Nicolas Diaz Fork</description>
@@ -141,7 +141,7 @@
 		<connection>scm:git:git@github.com:PabloNicolasDiaz/pdfcompare-jdk6.git</connection>
 		<developerConnection>scm:git:git@github.com:PabloNicolasDiaz/pdfcompare-jdk6.git</developerConnection>
 		<url>https://github.com/PabloNicolasDiaz/pdfcompare-jdk6.git</url>
-		<tag>HEAD</tag>
+		<tag>pdfcompare-jdk6-1.0.1</tag>
 	</scm>
 
 	<distributionManagement>
