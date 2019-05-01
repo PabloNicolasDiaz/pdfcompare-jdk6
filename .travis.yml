@@ -15,14 +15,11 @@ cache:
   - "$HOME/.gradle/wrapper/"
   - "$HOME/.m2/"
   - plugin-maven/build/localMavenRepository/
-before_deploy:
-- mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
-- export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
 deploy:
   provider: releases
   api_key:
     secure: ffIhmh5vNU2l6+GLMHzDsHwANJ/rD1zJLkeL+cVLALGYysiznCid+xPIb5hZX54P2UbptF3Ps44sKR/4HpdOpawjxktB3IXaCNHSz8g1XEXBx+k0p5eoYh4SEu8KpoQ4G3DSg5SG+ScCKSDo2eInwAxjcwkN6hkEzvd5mCZOQnC51Apx8nc40hokoqtrgFCYpRuPRdLjc1HK/zRMPRxdIM30uMVGagYwhmb/8vEn81vCHEw6qXUZm/h/TvUapXrN7d3OzU+q1MO7KS5pz0/bXRTwMRG35Wcxm8q+6uVXB5omXRz5ZkFkCx/XGW7muwqEd89REKrUWs40GNpE5xZloIVV5VclwrNrCVoO3cU1NmRo6mcE6WP4x6x/CcgyxhDoB0yA1WHsjgjVXJQiV9Or/WnEkCQ0LSMmDZnMfbIPtpBa4ODoL+XM3qqnKF0j6x9MrWcIL7vesMWgQP2dO1u7GftKAK3FNJJcisrcWrb8vME5Mgw4gMks04k2gHlkbT3z0vML6iyT6RLqs8bAGAq90DJWrH+2JTIXCeuDy7LeoGKaczmxGzZHOPZvPLZB99cjAj20bU8aNABFfMni6D+9vXWgXC4bB+rx4KJCGYcP7pvyfkuGc5hT3Vz1NrH3Z/Qrhb1Krs1NuajV60Mtt55bJ6fyRPwgZtL8uQ7cYIkCThs=
-  file: pdfcompare-jdk6/target/pdfcompare-jdk6-$project_version.jar
+  file: pdfcompare-jdk6/target/pdfcompare-jdk6-*.*
   draft: true 
   skip_cleanup: true
   name: $project_version
