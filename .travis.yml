@@ -23,6 +23,7 @@ deploy:
   file: 'pdfcompare-jdk6/target/pdfcompare-jdk6-*.*'
   draft: true
   skip_cleanup: true
+  name: $project_version
   on:
     tags: true
     repo: PabloNicolasDiaz/pdfcompare-jdk6
