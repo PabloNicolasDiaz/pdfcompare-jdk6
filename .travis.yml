@@ -1,4 +1,3 @@
-sudo: false
 language: java
 jdk:
   - oraclejdk11
@@ -28,3 +27,6 @@ deploy:
   on:
     tags: true
     repo: PabloNicolasDiaz/pdfcompare-jdk6
+env:
+  global:
+  - GPG_DIR="`pwd`/deploy"
