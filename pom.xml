@@ -370,6 +370,7 @@
 							</execution>
 						</executions>
 						<configuration>
+							<executable>${env.GPG_EXECUTABLE}</executable>
 							<gpgArguments>
 								<arg>--pinentry-mode</arg>
 								<arg>loopback</arg>
