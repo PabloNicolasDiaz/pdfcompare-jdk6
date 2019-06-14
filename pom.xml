@@ -285,7 +285,7 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>release</id>
+			<id>ossrh</id>
 			<build>
 				<plugins>
 					<plugin>
@@ -370,7 +370,7 @@
 							</execution>
 						</executions>
 						<configuration>
-							<executable>${env.GPG_EXECUTABLE}</executable>
+							<executable>${gpg.executable}</executable>
 							<gpgArguments>
 								<arg>--pinentry-mode</arg>
 								<arg>loopback</arg>
