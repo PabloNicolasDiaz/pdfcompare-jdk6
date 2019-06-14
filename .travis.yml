@@ -8,7 +8,7 @@ before_install:
 install:
   - mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 script:
-  - mvn --settings .travis-settings.xml clean deploy -B -U -Prelease
+  - mvn --settings .travis-settings.xml clean deploy -B -U -Possrh
 before_cache:
   - 'rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/'
 cache:
