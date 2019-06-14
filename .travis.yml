@@ -1,14 +1,14 @@
 sudo: false
 language: java
-script: ./mvnw clean verify
-
 jdk:
   - oraclejdk11
-before_script:
+before_install:
   - 'echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import'
   - 'echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust'
+install:
+  - mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
 script:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn deploy --settings .travis-settings.xml -B -U -Prelease || mvn -B verify --settings .travis-settings.xml'
+  - mvn --settings .travis-settings.xml clean deploy -B -U -Prelease
 before_cache:
   - 'rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/'
 cache:
