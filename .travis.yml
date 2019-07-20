@@ -1,19 +1,23 @@
 language: java
 jdk:
   - oraclejdk11
-before_install:
-  - 'echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import --no-tty --batch --yes'
-  - 'echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust --no-tty --batch --yes'
-install:
-  - mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
-script:
-  - mvn --settings .travis-settings.xml clean deploy -B -U -Possrh
+
 before_cache:
   - 'rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/'
 cache:
   directories:
     - $HOME/.m2/
     - plugin-maven/build/localMavenRepository/
+  
+before_install:
+  - 'echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import --no-tty --batch --yes'
+  - 'echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust --no-tty --batch --yes'
+install:
+  - mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true -B -V
+
+script:
+  - mvn --settings .travis-settings.xml clean deploy -B -U -Possrh
+
 before_deploy:
     - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
     - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
