@@ -32,6 +32,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import lombok.val;
+
 public class TempDirectoryExtension implements AfterEachCallback, ParameterResolver {
 
 	private static final String KEY = "tempDirectory";
@@ -46,8 +48,8 @@ public class TempDirectoryExtension implements AfterEachCallback, ParameterResol
 	@Override
 	public Object resolveParameter(ParameterContext paramContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		final Parameter parameter = paramContext.getParameter();
-		String parentPath = parameter.getAnnotation(TempDirectory.class).parentPath();
+		val parameter = paramContext.getParameter();
+		val parentPath = parameter.getAnnotation(TempDirectory.class).parentPath();
 		return getLocalStore(extensionContext).getOrComputeIfAbsent(KEY,
 				key -> createTempDirectory(parentPath, extensionContext));
 	}
@@ -70,10 +72,11 @@ public class TempDirectoryExtension implements AfterEachCallback, ParameterResol
 
 	private Path createTempDirectory(final String parentPath, ExtensionContext context) {
 		try {
+			val dirName = getDirName(context);
 			if (parentPath.length() > 0) {
-				return Files.createTempDirectory(Paths.get(parentPath), getDirName(context));
+				return Files.createTempDirectory(Paths.get(parentPath), dirName);
 			} else {
-				return Files.createTempDirectory(getDirName(context));
+				return Files.createTempDirectory(dirName);
 			}
 		} catch (IOException e) {
 			throw new ParameterResolutionException("Could not create temp directory", e);
