@@ -34,3 +34,7 @@ deploy:
 env:
   global:
   - GPG_DIR="`pwd`/deploy"
+
+before_script:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf; fi 
+ 
