@@ -37,9 +37,5 @@ env:
   
 before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf; fi 
-  - killall -9 gpg-agent
-  - export GPG_TTY=`tty`
-  - gpg-agent
-  - export PINENTRY_MODE="--pinentry-mode=loopback"
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ln -s `which gpg` /usr/local/bin/gpg2; fi
+  - gpg-connect-agent reloadagent /bye
  
