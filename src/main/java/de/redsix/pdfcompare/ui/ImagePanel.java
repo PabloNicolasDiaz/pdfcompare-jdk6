@@ -26,6 +26,8 @@ import javax.swing.JPanel;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 
+import lombok.val;
+
 class ImagePanel extends JPanel implements Scrollable {
 
 	/**
@@ -56,20 +58,19 @@ class ImagePanel extends JPanel implements Scrollable {
 
 	@Override
 	public void paintComponent(final Graphics g) {
-		if (image == null) {
-			return;
-		}
 		g.setColor(Color.DARK_GRAY);
 		g.clearRect(0, 0, oldWidth, oldHeight);
 		if (zoomPage) {
 			setZoomToPage();
 		}
-		g.drawImage(image, 0, 0, getZoomWidth(), getZoomHeight(), null);
+		if (image != null) {
+			g.drawImage(image, 0, 0, getZoomWidth(), getZoomHeight(), null);
+		}
 	}
 
 	private void setZoomToPage() {
-		double zoomWidth = ((double) viewSize.width) / ((double) getImageWidth());
-		double zoomHeight = ((double) viewSize.height) / ((double) getImageHeight());
+		val zoomWidth = ((double) viewSize.width) / ((double) getImageWidth());
+		val zoomHeight = ((double) viewSize.height) / ((double) getImageHeight());
 		zoom = Math.min(zoomWidth, zoomHeight);
 	}
 

@@ -34,8 +34,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Iterator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +42,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.redsix.junitextensions.TempDirectory;
 import de.redsix.junitextensions.TempDirectoryExtension;
+import lombok.Cleanup;
+import lombok.val;
 
 @ExtendWith(TempDirectoryExtension.class)
 public class IntegrationTest {
@@ -60,7 +60,7 @@ public class IntegrationTest {
 
 	@Test
 	public void differingDocumentsAreNotEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).compare();
+		val result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.hasOnlyExpected(), is(false));
@@ -68,17 +68,17 @@ public class IntegrationTest {
 		assertThat(result.hasOnlyActual(), is(false));
 		assertThat(result.getNumberOfPages(), is(2));
 
-		final Collection<PageArea> differences = result.getDifferences();
+		val differences = result.getDifferences();
 		assertThat(differences, hasSize(2));
-		final Iterator<PageArea> diffIter = differences.iterator();
-		final PageArea diff1 = diffIter.next();
+		val diffIter = differences.iterator();
+		val diff1 = diffIter.next();
 		assertThat(diff1.getPage(), is(1));
 		assertThat(diff1.getX1(), is(237));
 		assertThat(diff1.getY1(), is(363));
 		assertThat(diff1.getX2(), is(421));
 		assertThat(diff1.getY2(), is(408));
 
-		final PageArea diff2 = diffIter.next();
+		val diff2 = diffIter.next();
 		assertThat(diff2.getPage(), is(2));
 		assertThat(diff2.getX1(), is(1776));
 		assertThat(diff2.getY1(), is(248));
@@ -93,14 +93,14 @@ public class IntegrationTest {
 
 	@Test
 	public void differingDocumentsAreNotEqualUsingOutputStream() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).compare();
+		val result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).compare();
 		writeAndCompareWithOutputStream(result);
 	}
 
 	@Test
 	public void differingDocumentsAreNotEqualUsingPageOverflow() throws IOException {
-		final CompareResult result = new PdfComparator<CompareResultWithPageOverflow>(f("expected.pdf"),
-				f("actual.pdf"), new CompareResultWithPageOverflow()).compare();
+		val result = new PdfComparator<CompareResultWithPageOverflow>(f("expected.pdf"), f("actual.pdf"),
+				new CompareResultWithPageOverflow()).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.getNumberOfPages(), is(2));
@@ -109,8 +109,8 @@ public class IntegrationTest {
 
 	@Test
 	public void differingDocumentsAreNotEqualUsingMemoryOverflow() throws IOException {
-		final CompareResult result = new PdfComparator<CompareResultWithMemoryOverflow>(r("expected.pdf"),
-				r("actual.pdf"), new CompareResultWithMemoryOverflow()).compare();
+		val result = new PdfComparator<CompareResultWithMemoryOverflow>(r("expected.pdf"), r("actual.pdf"),
+				new CompareResultWithMemoryOverflow()).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.getNumberOfPages(), is(2));
@@ -119,8 +119,7 @@ public class IntegrationTest {
 
 	@Test
 	public void differingDocumentsWithIgnoreAreEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).withIgnore("ignore.conf")
-				.compare();
+		val result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).withIgnore("ignore.conf").compare();
 		assertThat(result.isEqual(), is(true));
 		assertThat(result.isNotEqual(), is(false));
 		assertThat(result.hasDifferenceInExclusion(), is(true));
@@ -131,9 +130,8 @@ public class IntegrationTest {
 
 	@Test
 	public void differingDocumentsWithFullPageIgnoreAreEqual() throws IOException {
-		final ByteArrayInputStream ignoreIS = new ByteArrayInputStream("exclusions: [{page:1}, {page:2}]".getBytes());
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).withIgnore(ignoreIS)
-				.compare();
+		val ignoreIS = new ByteArrayInputStream("exclusions: [{page:1}, {page:2}]".getBytes());
+		val result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).withIgnore(ignoreIS).compare();
 		assertThat(result.isEqual(), is(true));
 		assertThat(result.hasDifferenceInExclusion(), is(true));
 		assertThat(result.getNumberOfPages(), is(2));
@@ -142,8 +140,8 @@ public class IntegrationTest {
 
 	@Test
 	public void exclusionsCanBeAddedViaAPI() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf"))
-				.with(new PageArea(1, 230, 350, 450, 420)).with(new PageArea(2, 1750, 240, 2000, 300)).compare();
+		val result = new PdfComparator<>(r("expected.pdf"), r("actual.pdf")).with(new PageArea(1, 230, 350, 450, 420))
+				.with(new PageArea(2, 1750, 240, 2000, 300)).compare();
 		assertThat(result.isEqual(), is(true));
 		assertThat(result.hasDifferenceInExclusion(), is(true));
 		writeAndCompare(result);
@@ -151,7 +149,7 @@ public class IntegrationTest {
 
 	@Test
 	public void aShorterDocumentActualIsNotEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("expected.pdf"), r("short.pdf")).compare();
+		val result = new PdfComparator<>(r("expected.pdf"), r("short.pdf")).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.getNumberOfPages(), is(2));
@@ -160,7 +158,7 @@ public class IntegrationTest {
 
 	@Test
 	public void aShorterDocumentExpectedIsNotEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>(r("short.pdf"), r("actual.pdf")).compare();
+		val result = new PdfComparator<>(r("short.pdf"), r("actual.pdf")).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.getNumberOfPages(), is(2));
@@ -169,9 +167,9 @@ public class IntegrationTest {
 
 	@Test
 	public void missingActualIsNotEqual() throws IOException {
-		final Path target = outDir.resolve("expected.pdf");
+		val target = outDir.resolve("expected.pdf");
 		Files.copy(r("expected.pdf"), target);
-		final CompareResult result = new PdfComparator<>(target.toString(), "doesNotExist.pdf").compare();
+		val result = new PdfComparator<>(target.toString(), "doesNotExist.pdf").compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.hasOnlyExpected(), is(true));
@@ -183,9 +181,9 @@ public class IntegrationTest {
 
 	@Test
 	public void missingExpectedIsNotEqual() throws IOException {
-		final Path target = outDir.resolve("actual.pdf");
+		val target = outDir.resolve("actual.pdf");
 		Files.copy(r("actual.pdf"), target);
-		final CompareResult result = new PdfComparator<>("doesNotExist.pdf", target.toString()).compare();
+		val result = new PdfComparator<>("doesNotExist.pdf", target.toString()).compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		assertThat(result.hasOnlyExpected(), is(false));
@@ -197,7 +195,7 @@ public class IntegrationTest {
 
 	@Test
 	public void bothFilesMissingIsNotEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>("doesNotExist.pdf", "doesNotExistAsWell.pdf").compare();
+		val result = new PdfComparator<>("doesNotExist.pdf", "doesNotExistAsWell.pdf").compare();
 		assertThat(result.isNotEqual(), is(true));
 		assertThat(result.isEqual(), is(false));
 		writeAndCompare(result);
@@ -205,7 +203,7 @@ public class IntegrationTest {
 
 	@Test
 	public void identicalFilenamesAreEqual() throws IOException {
-		final CompareResult result = new PdfComparator<>("whatever.pdf", "whatever.pdf").compare();
+		val result = new PdfComparator<>("whatever.pdf", "whatever.pdf").compare();
 		assertThat(result.isEqual(), is(true));
 		assertThat(result.isNotEqual(), is(false));
 		assertThat(result.getNumberOfPages(), is(0));
@@ -222,30 +220,30 @@ public class IntegrationTest {
 
 	private void writeAndCompare(final CompareResult result) throws IOException {
 		if (System.getenv().get("pdfCompareInTest") != null || System.getProperty("pdfCompareInTest") != null) {
-			final String filename = outDir.resolve(testName).toString();
+			val filename = outDir.resolve(testName).toString();
 			result.writeTo(filename);
-			try (final InputStream expectedPdf = getClass().getResourceAsStream(testName + ".pdf")) {
-				if (expectedPdf != null) {
-					assertTrue(new PdfComparator<>(expectedPdf, new FileInputStream(filename + ".pdf")).compare()
-							.isEqual());
-				} else {
-					assertFalse(Files.exists(Paths.get(filename + ".pdf")));
-				}
+			@Cleanup
+			val expectedPdf = getClass().getResourceAsStream(testName + ".pdf");
+			if (expectedPdf != null) {
+				assertTrue(
+						new PdfComparator<>(expectedPdf, new FileInputStream(filename + ".pdf")).compare().isEqual());
+			} else {
+				assertFalse(Files.exists(Paths.get(filename + ".pdf")));
 			}
 		}
 	}
 
 	private void writeAndCompareWithOutputStream(final CompareResult result) throws IOException {
 		if (System.getenv().get("pdfCompareInTest") != null || System.getProperty("pdfCompareInTest") != null) {
-			final String filename = outDir.resolve(testName).toString();
+			val filename = outDir.resolve(testName).toString();
 			result.writeTo(new FileOutputStream(filename + ".pdf"));
-			try (final InputStream expectedPdf = getClass().getResourceAsStream(testName + ".pdf")) {
-				if (expectedPdf != null) {
-					assertTrue(new PdfComparator<>(expectedPdf, new FileInputStream(filename + ".pdf")).compare()
-							.isEqual());
-				} else {
-					assertThat(Files.size(Paths.get(filename + ".pdf")), is(0));
-				}
+			@Cleanup
+			val expectedPdf = getClass().getResourceAsStream(testName + ".pdf");
+			if (expectedPdf != null) {
+				assertTrue(
+						new PdfComparator<>(expectedPdf, new FileInputStream(filename + ".pdf")).compare().isEqual());
+			} else {
+				assertThat(Files.size(Paths.get(filename + ".pdf")), is(0));
 			}
 		}
 	}

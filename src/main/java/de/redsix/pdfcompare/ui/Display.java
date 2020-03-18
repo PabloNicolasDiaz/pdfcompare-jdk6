@@ -19,12 +19,14 @@ package de.redsix.pdfcompare.ui;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,7 +35,10 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -41,9 +46,12 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.WindowConstants;
 
-import lombok.val;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+
 import de.redsix.pdfcompare.CompareResultWithExpectedAndActual;
 import de.redsix.pdfcompare.PdfComparator;
+import lombok.val;
 
 public class Display {
 
@@ -60,7 +68,6 @@ public class Display {
 		final Rectangle screenBounds = getDefaultScreenBounds();
 		frame.setSize(Math.min(screenBounds.width, 1700), Math.min(screenBounds.height, 1000));
 		frame.setLocation(screenBounds.x, screenBounds.y);
-		// frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
 		val toolBar = new JToolBar();
 		toolBar.setRollover(true);
@@ -106,24 +113,38 @@ public class Display {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				JFileChooser fileChooser = new JFileChooser();
-				if (fileChooser.showDialog(frame, "Open expected PDF") == JFileChooser.APPROVE_OPTION) {
-					val expectedFile = fileChooser.getSelectedFile();
-					if (fileChooser.showDialog(frame, "Open actual PDF") == JFileChooser.APPROVE_OPTION) {
-						val actualFile = fileChooser.getSelectedFile();
-						try {
-							frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-							val compareResult = (CompareResultWithExpectedAndActual) new PdfComparator<CompareResultWithExpectedAndActual>(
-									expectedFile, actualFile, new CompareResultWithExpectedAndActual()).compare();
-							viewModel = new ViewModel(compareResult);
-							leftPanel.setImage(viewModel.getLeftImage());
-							resultPanel.setImage(viewModel.getDiffImage());
-							frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-							expectedButton.setSelected(true);
-						} catch (IOException ex) {
-							DisplayExceptionDialog(frame, ex);
+				try {
+					if (fileChooser.showDialog(frame, "Open expected PDF") == JFileChooser.APPROVE_OPTION) {
+						val expectedFile = fileChooser.getSelectedFile();
+						val passwordForExpectedFile = askForPassword(expectedFile);
+						if (fileChooser.showDialog(frame, "Open actual PDF") == JFileChooser.APPROVE_OPTION) {
+							val actualFile = fileChooser.getSelectedFile();
+							val passwordForActualFile = askForPassword(actualFile);
+							try {
+								frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+								val compareResult = (CompareResultWithExpectedAndActual) new PdfComparator<>(
+										expectedFile, actualFile, new CompareResultWithExpectedAndActual())
+												.withExpectedPassword(
+														String.valueOf(passwordForExpectedFile.getPassword()))
+												.withActualPassword(String.valueOf(passwordForActualFile.getPassword()))
+												.compare();
+								viewModel = new ViewModel(compareResult);
+								leftPanel.setImage(viewModel.getLeftImage());
+								resultPanel.setImage(viewModel.getDiffImage());
+								if (compareResult.isEqual()) {
+									JOptionPane.showMessageDialog(frame, "The compared documents are identical.");
+								}
+								frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+								expectedButton.setSelected(true);
+							} catch (IOException ex) {
+								DisplayExceptionDialog(frame, ex);
+							}
 						}
 					}
+				} catch (IOException ex) {
+					DisplayExceptionDialog(frame, ex);
 				}
+
 			}
 		});
 
@@ -151,7 +172,7 @@ public class Display {
 
 		toolBar.addSeparator();
 
-		final JToggleButton pageZoomButton = new JToggleButton("Zoom Page");
+		val pageZoomButton = new JToggleButton("Zoom Page");
 		pageZoomButton.setSelected(true);
 		pageZoomButton.addActionListener(new ActionListener() {
 			@Override
@@ -202,7 +223,7 @@ public class Display {
 
 		toolBar.addSeparator();
 
-		final ButtonGroup buttonGroup = new ButtonGroup();
+		val buttonGroup = new ButtonGroup();
 		expectedButton.setSelected(true);
 		expectedButton.addActionListener(new ActionListener() {
 			@Override
@@ -214,7 +235,7 @@ public class Display {
 		toolBar.add(expectedButton);
 		buttonGroup.add(expectedButton);
 
-		final JToggleButton actualButton = new JToggleButton("Actual");
+		val actualButton = new JToggleButton("Actual");
 		actualButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -229,18 +250,18 @@ public class Display {
 	}
 
 	private static void DisplayExceptionDialog(final JFrame frame, final IOException ex) {
-		final StringWriter stringWriter = new StringWriter();
+		val stringWriter = new StringWriter();
 		ex.printStackTrace(new PrintWriter(stringWriter));
-		JTextArea textArea = new JTextArea(
+		val textArea = new JTextArea(
 				"Es ist ein unerwarteter Fehler aufgetreten: " + ex.getMessage() + "\n\n" + stringWriter);
-		JScrollPane scrollPane = new JScrollPane(textArea);
+		val scrollPane = new JScrollPane(textArea);
 		scrollPane.setPreferredSize(new Dimension(900, 700));
 		JOptionPane.showMessageDialog(frame, scrollPane);
 	}
 
 	private static void addToolBarButton(final JToolBar toolBar, final String label,
 			final ActionListener actionListener) {
-		final JButton button = new JButton(label);
+		val button = new JButton(label);
 		button.addActionListener(actionListener);
 		toolBar.add(button);
 	}
@@ -248,5 +269,35 @@ public class Display {
 	private static Rectangle getDefaultScreenBounds() {
 		return GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
 				.getBounds();
+	}
+
+	private static JPasswordField askForPassword(final File file) throws IOException {
+		val passwordForFile = new JPasswordField(10);
+		if (isInvalidPassword(file, "")) {
+			val label = new JLabel("Enter password: ");
+			label.setLabelFor(passwordForFile);
+
+			val textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+			textPane.add(label);
+			textPane.add(passwordForFile);
+
+			JOptionPane.showMessageDialog(null, textPane, "PDF is encrypted", JOptionPane.INFORMATION_MESSAGE);
+
+			label.setText("Password was invalid. Enter password: ");
+			while (isInvalidPassword(file, String.valueOf(passwordForFile.getPassword()))) {
+				passwordForFile.setText("");
+				JOptionPane.showMessageDialog(null, textPane, "PDF is encrypted", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		return passwordForFile;
+	}
+
+	private static boolean isInvalidPassword(final File file, final String password) throws IOException {
+		try {
+			PDDocument.load(file, password).close();
+		} catch (InvalidPasswordException e) {
+			return true;
+		}
+		return false;
 	}
 }

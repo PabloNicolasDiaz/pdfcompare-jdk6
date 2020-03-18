@@ -1,41 +1,12 @@
 language: java
-jdk:
-  - oraclejdk11
-
-before_cache:
-  - 'rm -fr plugin-maven/build/localMavenRepository/com/diffplug/spotless/'
+# Work around travis-ci/travis-ci/issues/6593
+sudo: true
 cache:
   directories:
-    - $HOME/.m2/
-    - plugin-maven/build/localMavenRepository/
-  
-before_install:
-  - 'echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import --no-tty --batch --yes'
-  - 'echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust --no-tty --batch --yes'
-install:
-  - mvn --settings .travis-settings.xml install -DskipTests=true -Dgpg.skip=true -Dmaven.javadoc.skip=true -B -V
+    - $HOME/.m2
 
 script:
-  - mvn --settings .travis-settings.xml clean deploy -B -U -Possrh
-
-before_deploy:
-    - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
-    - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
-deploy:
-  provider: releases
-  api_key:
-    secure: ffIhmh5vNU2l6+GLMHzDsHwANJ/rD1zJLkeL+cVLALGYysiznCid+xPIb5hZX54P2UbptF3Ps44sKR/4HpdOpawjxktB3IXaCNHSz8g1XEXBx+k0p5eoYh4SEu8KpoQ4G3DSg5SG+ScCKSDo2eInwAxjcwkN6hkEzvd5mCZOQnC51Apx8nc40hokoqtrgFCYpRuPRdLjc1HK/zRMPRxdIM30uMVGagYwhmb/8vEn81vCHEw6qXUZm/h/TvUapXrN7d3OzU+q1MO7KS5pz0/bXRTwMRG35Wcxm8q+6uVXB5omXRz5ZkFkCx/XGW7muwqEd89REKrUWs40GNpE5xZloIVV5VclwrNrCVoO3cU1NmRo6mcE6WP4x6x/CcgyxhDoB0yA1WHsjgjVXJQiV9Or/WnEkCQ0LSMmDZnMfbIPtpBa4ODoL+XM3qqnKF0j6x9MrWcIL7vesMWgQP2dO1u7GftKAK3FNJJcisrcWrb8vME5Mgw4gMks04k2gHlkbT3z0vML6iyT6RLqs8bAGAq90DJWrH+2JTIXCeuDy7LeoGKaczmxGzZHOPZvPLZB99cjAj20bU8aNABFfMni6D+9vXWgXC4bB+rx4KJCGYcP7pvyfkuGc5hT3Vz1NrH3Z/Qrhb1Krs1NuajV60Mtt55bJ6fyRPwgZtL8uQ7cYIkCThs=
-  file: 'pdfcompare-jdk6/target/pdfcompare-jdk6-$project_version*.*'
-  draft: true
-  skip_cleanup: true
-  on:
-    tags: true
-    repo: PabloNicolasDiaz/pdfcompare-jdk6
-env:
-  global:
-  - GPG_DIR="`pwd`/deploy"
-  
-before_script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf; fi 
-  - gpg-connect-agent reloadagent /bye
- 
+  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && mvn -B deploy --settings .travis-settings.xml || mvn -B verify --settings .travis-settings.xml'
+jdk:
+  - openjdk8
+  - openjdk11

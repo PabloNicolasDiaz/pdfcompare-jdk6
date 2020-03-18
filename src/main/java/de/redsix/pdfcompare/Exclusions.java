@@ -29,9 +29,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import lombok.Cleanup;
-import lombok.val;
-
 import org.apache.commons.io.Charsets;
 
 import com.typesafe.config.Config;
@@ -41,6 +38,44 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 
+import lombok.Cleanup;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Exclusions collect rectangular areas of the document, that shall be ignored
+ * during comparison. Each area is specified through a {@link PageArea} object.
+ *
+ * Exclusions can be read from a file in JSON format (or actually a superset
+ * called
+ * <a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>)
+ * which has the following form:
+ * 
+ * <pre>
+ * exclusions: [
+ *     {
+ *         page: 2
+ *         x1: 300 // entries without a unit are in pixels, when Pdf is rendered at 300DPI
+ *         y1: 1000
+ *         x2: 550
+ *         y2: 1300
+ *     },
+ *     {
+ *         // page is optional. When not given, the exclusion applies to all pages.
+ *         x1: 130.5mm // entries can also be given in units of cm, mm or pt (DTP-Point defined as 1/72 Inches)
+ *         y1: 3.3cm
+ *         x2: 190mm
+ *         y2: 3.7cm
+ *     },
+ *     {
+ *         page: 7
+ *         // coordinates are optional. When not given, the whole page is excluded.
+ *     }
+ * ]
+ * </pre>
+ *
+ */
+@Slf4j
 public class Exclusions {
 
 	private static final float CM_TO_PIXEL = 1 / 2.54f * DPI;
@@ -53,13 +88,14 @@ public class Exclusions {
 	private final PageExclusions exclusionsForAllPages = new PageExclusions();
 
 	public Exclusions add(final PageArea exclusion) {
-		if (exclusion.page < 0) {
+		val page = exclusion.getPage();
+		if (page < 0) {
 			exclusionsForAllPages.add(exclusion);
 		} else {
-			if (exclusionsPerPage.get(exclusion.page) == null) {
+			if (exclusionsPerPage.get(page) == null) {
 				val x = new PageExclusions(exclusionsForAllPages);
 				x.add(exclusion);
-				exclusionsPerPage.put(exclusion.page, x);
+				exclusionsPerPage.put(page, x);
 			}
 		}
 		return this;
@@ -79,10 +115,19 @@ public class Exclusions {
 	}
 
 	public void readExclusions(final File file) {
-		if (file != null && file.exists()) {
-			final Config config = ConfigFactory.parseFile(file, configParseOptions);
+		requireNonNull(file, "file must not be null");
+		if (file.exists()) {
+			val config = ConfigFactory.parseFile(file, configParseOptions);
 			readFromConfig(config);
+		} else {
+			log.info("Ignore-file at '{}' not found. Continuing without ignores.", file);
 		}
+	}
+
+	private static <T> T requireNonNull(T t, String string) {
+		if (t == null)
+			throw new NullPointerException(string);
+		return t;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -93,7 +138,7 @@ public class Exclusions {
 				val inputStreamReader = new InputStreamReader(inputStream, Charsets.UTF_8);
 				readExclusions(inputStreamReader);
 			} catch (IOException e) {
-
+				log.warn("Could not read ignores from InputStream. Continuing without ignores.", e);
 			}
 		}
 	}

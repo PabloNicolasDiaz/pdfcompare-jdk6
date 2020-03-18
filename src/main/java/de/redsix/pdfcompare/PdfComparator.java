@@ -21,7 +21,6 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,27 +34,23 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-import lombok.val;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.redsix.pdfcompare.env.DefaultEnvironment;
 import de.redsix.pdfcompare.env.Environment;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PdfComparator<T extends CompareResultImpl> {
 
 	private static interface Supplier<T> {
 		public T get();
 	}
 
-	private static final Logger LOG = LoggerFactory.getLogger(PdfComparator.class);
 	public static final int DPI = 300;
 	private static final int EXTRA_RGB = new Color(0, 160, 0).getRGB();
 	private static final int MISSING_RGB = new Color(220, 0, 0).getRGB();
@@ -161,25 +156,73 @@ public class PdfComparator<T extends CompareResultImpl> {
 	public void setEnvironment(Environment environment) {
 		this.environment = environment;
 	}
-
+	
+	/**
+     * Reads a file with Exclusions.
+     * @param ignoreFilename The file to read
+     * @return this
+     * @see PdfComparator#withIgnore(InputStream)
+     */
 	public PdfComparator<T> withIgnore(final String ignoreFilename) {
 		notNull(ignoreFilename, "ignoreFilename is null");
 		exclusions.readExclusions(ignoreFilename);
 		return this;
 	}
-
+	
+	/**
+     * Reads a file with Exclusions.
+     * @param ignoreFile The file to read
+     * @return this
+     * @see PdfComparator#withIgnore(InputStream)
+     */
 	public PdfComparator<T> withIgnore(final File ignoreFile) {
 		notNull(ignoreFile, "ignoreFile is null");
 		exclusions.readExclusions(ignoreFile);
 		return this;
 	}
-
+	
+	/**
+     * Reads a file with Exclusions.
+     *
+     * It is possible to define rectangular areas that are ignored during comparison. For that, a file needs to be created, which defines areas to ignore.
+     * The file format is JSON (or actually a superset called <a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>) and has the following form:
+     * <pre>
+     * exclusions: [
+     *     {
+     *         page: 2
+     *         x1: 300 // entries without a unit are in pixels, when Pdf is rendered at 300DPI
+     *         y1: 1000
+     *         x2: 550
+     *         y2: 1300
+     *     },
+     *     {
+     *         // page is optional. When not given, the exclusion applies to all pages.
+     *         x1: 130.5mm // entries can also be given in units of cm, mm or pt (DTP-Point defined as 1/72 Inches)
+     *         y1: 3.3cm
+     *         x2: 190mm
+     *         y2: 3.7cm
+     *     },
+     *     {
+     *         page: 7
+     *         // coordinates are optional. When not given, the whole page is excluded.
+     *     }
+     * ]</pre>
+     *
+     * @param ignoreIS The inputStream to read
+     * @return this
+     */
 	public PdfComparator<T> withIgnore(final InputStream ignoreIS) {
 		notNull(ignoreIS, "ignoreIS is null");
 		exclusions.readExclusions(ignoreIS);
 		return this;
 	}
 
+	/**
+     * Allows to specify an area of a page that is excluded during the comparison.
+     * @deprecated Use {@link PdfComparator#withIgnore(PageArea)} instead.
+     * @param exclusion An area of the document, that shall be ignored.
+     * @return this
+     */
 	public PdfComparator<T> with(final PageArea exclusion) {
 		notNull(exclusion, "exclusion is null");
 		exclusions.add(exclusion);
@@ -240,7 +283,7 @@ public class PdfComparator<T extends CompareResultImpl> {
 					addSingleDocumentToResult(actualStream, EXTRA_RGB);
 					compareResult.actualOnly();
 				} catch (IOException innerEx) {
-					// LOG.warn("No files found to compare. Tried Expected: '{}' and Actual: '{}'",
+					// log.warn("No files found to compare. Tried Expected: '{}' and Actual: '{}'",
 					// ex.getFile(),
 					// innerEx.getFile());
 					compareResult.noPagesFound();
@@ -254,13 +297,13 @@ public class PdfComparator<T extends CompareResultImpl> {
 
 	private void compare(final PDDocument expectedDocument, final PDDocument actualDocument) throws IOException {
 		expectedDocument.setResourceCache(new ResourceCacheWithLimitedImages(environment));
-		PDFRenderer expectedPdfRenderer = new PDFRenderer(expectedDocument);
+		val expectedPdfRenderer = new PDFRenderer(expectedDocument);
 
 		actualDocument.setResourceCache(new ResourceCacheWithLimitedImages(environment));
-		PDFRenderer actualPdfRenderer = new PDFRenderer(actualDocument);
+		val actualPdfRenderer = new PDFRenderer(actualDocument);
 
-		final int minPageCount = Math.min(expectedDocument.getNumberOfPages(), actualDocument.getNumberOfPages());
-		CountDownLatch latch = new CountDownLatch(minPageCount);
+		val minPageCount = Math.min(expectedDocument.getNumberOfPages(), actualDocument.getNumberOfPages());
+		val latch = new CountDownLatch(minPageCount);
 		for (int pageIndex = 0; pageIndex < minPageCount; pageIndex++) {
 			drawImage(latch, pageIndex, expectedDocument, actualDocument, expectedPdfRenderer, actualPdfRenderer);
 		}
@@ -282,36 +325,36 @@ public class PdfComparator<T extends CompareResultImpl> {
 			@Override
 			public void run() {
 				try {
-					LOG.trace("Drawing page {}", pageIndex);
-					final Future<ImageWithDimension> expectedImageFuture = parrallelDrawExecutor
+					log.trace("Drawing page {}", pageIndex);
+					val expectedImageFuture = parrallelDrawExecutor
 							.submit(new Callable<ImageWithDimension>() {
 								@Override
 								public ImageWithDimension call() throws Exception {
 									return renderPageAsImage(expectedDocument, expectedPdfRenderer, pageIndex);
 								}
 							});
-					final Future<ImageWithDimension> actualImageFuture = parrallelDrawExecutor
+					val actualImageFuture = parrallelDrawExecutor
 							.submit(new Callable<ImageWithDimension>() {
 								@Override
 								public ImageWithDimension call() throws Exception {
 									return renderPageAsImage(actualDocument, actualPdfRenderer, pageIndex);
 								}
 							});
-					final ImageWithDimension expectedImage = getImage(expectedImageFuture, pageIndex,
+					val expectedImage = getImage(expectedImageFuture, pageIndex,
 							"expected document");
-					final ImageWithDimension actualImage = getImage(actualImageFuture, pageIndex, "actual document");
-					final DiffImage diffImage = new DiffImage(expectedImage, actualImage, pageIndex, environment,
+					val actualImage = getImage(actualImageFuture, pageIndex, "actual document");
+					val diffImage = new DiffImage(expectedImage, actualImage, pageIndex, environment,
 							exclusions, compareResult);
-					LOG.trace("Enqueueing page {}.", pageIndex);
+					log.trace("Enqueueing page {}.", pageIndex);
 					diffExecutor.execute(new Runnable() {
 						@Override
 						public void run() {
-							LOG.trace("Diffing page {}", diffImage);
+							log.trace("Diffing page {}", diffImage);
 							diffImage.diffImages();
-							LOG.trace("DONE Diffing page {}", diffImage);
+							log.trace("DONE Diffing page {}", diffImage);
 						}
 					});
-					LOG.trace("DONE drawing page {}", pageIndex);
+					log.trace("DONE drawing page {}", pageIndex);
 				} catch (RenderingException e) {
 				} finally {
 					latch.countDown();
@@ -325,13 +368,13 @@ public class PdfComparator<T extends CompareResultImpl> {
 		try {
 			return imageFuture.get(timeout, unit);
 		} catch (InterruptedException e) {
-			LOG.warn("Waiting for Future was interrupted while rendering page {} for {}", pageIndex, type, e);
+			log.warn("Waiting for Future was interrupted while rendering page {} for {}", pageIndex, type, e);
 			Thread.currentThread().interrupt();
 		} catch (TimeoutException e) {
-			LOG.error("Waiting for Future timed out after {} {} while rendering page {} for {}", timeout, unit,
+			log.error("Waiting for Future timed out after {} {} while rendering page {} for {}", timeout, unit,
 					pageIndex, type, e);
 		} catch (ExecutionException e) {
-			LOG.error("Error while rendering page {} for {}", pageIndex, type, e);
+			log.error("Error while rendering page {} for {}", pageIndex, type, e);
 		}
 		throw new RenderingException();
 	}
@@ -339,15 +382,15 @@ public class PdfComparator<T extends CompareResultImpl> {
 	private void addSingleDocumentToResult(InputStream expectedPdfIS, int markerColor) throws IOException {
 		@Cleanup
 		val expectedDocument = PDDocument.load(expectedPdfIS);
-		PDFRenderer expectedPdfRenderer = new PDFRenderer(expectedDocument);
+		val expectedPdfRenderer = new PDFRenderer(expectedDocument);
 		addExtraPages(expectedDocument, expectedPdfRenderer, 0, markerColor, true);
 	}
 
 	private void addExtraPages(final PDDocument document, final PDFRenderer pdfRenderer, final int minPageCount,
 			final int color, final boolean expected) throws IOException {
 		for (int pageIndex = minPageCount; pageIndex < document.getNumberOfPages(); pageIndex++) {
-			ImageWithDimension image = renderPageAsImage(document, pdfRenderer, pageIndex);
-			final DataBuffer dataBuffer = image.bufferedImage.getRaster().getDataBuffer();
+			val image = renderPageAsImage(document, pdfRenderer, pageIndex);
+			val dataBuffer = image.bufferedImage.getRaster().getDataBuffer();
 			for (int i = 0; i < image.bufferedImage.getWidth() * MARKER_WIDTH; i++) {
 				dataBuffer.setElem(i, color);
 			}
@@ -371,9 +414,9 @@ public class PdfComparator<T extends CompareResultImpl> {
 
 	public static ImageWithDimension renderPageAsImage(final PDDocument document, final PDFRenderer expectedPdfRenderer,
 			final int pageIndex) throws IOException {
-		final BufferedImage bufferedImage = expectedPdfRenderer.renderImageWithDPI(pageIndex, DPI);
-		final PDPage page = document.getPage(pageIndex);
-		final PDRectangle mediaBox = page.getMediaBox();
+		val bufferedImage = expectedPdfRenderer.renderImageWithDPI(pageIndex, DPI);
+		val page = document.getPage(pageIndex);
+		val mediaBox = page.getMediaBox();
 		if (page.getRotation() == 90 || page.getRotation() == 270)
 			return new ImageWithDimension(bufferedImage, mediaBox.getHeight(), mediaBox.getWidth());
 		else
