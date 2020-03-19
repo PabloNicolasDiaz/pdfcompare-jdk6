@@ -28,10 +28,11 @@ import lombok.val;
 import org.junit.jupiter.api.Test;
 
 import com.typesafe.config.ConfigException;
+import de.redsix.pdfcompare.env.DefaultEnvironment;
 
 public class ExclusionsTest {
 
-	private final Exclusions exclusions = new Exclusions();
+	private final Exclusions exclusions = new Exclusions(DefaultEnvironment.create());
 
 	@Test
 	public void readExclusions() {

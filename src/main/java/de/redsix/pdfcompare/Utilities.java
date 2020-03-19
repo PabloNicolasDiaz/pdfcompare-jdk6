@@ -152,7 +152,8 @@ public class Utilities {
 			throw new IllegalArgumentException("Page out of range. Last page is: " + pdDocument.getNumberOfPages());
 		}
 		pdDocument.setResourceCache(new ResourceCacheWithLimitedImages(environment));
-		PDFRenderer pdfRenderer = new PDFRenderer(pdDocument);
-		return PdfComparator.renderPageAsImage(pdDocument, pdfRenderer, page);
+		val pdfRenderer = new PDFRenderer(pdDocument);
+		return PdfComparator.renderPageAsImage(pdDocument, pdfRenderer, page, environment);
 	}
+
 }

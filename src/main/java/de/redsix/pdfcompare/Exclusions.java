@@ -16,7 +16,7 @@
  */
 package de.redsix.pdfcompare;
 
-import static de.redsix.pdfcompare.PdfComparator.DPI;
+import static org.apache.commons.lang3.Validate.notNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,23 +24,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.Charsets;
+import lombok.Cleanup;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
+import org.apache.pdfbox.util.Charsets;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
-
-import lombok.Cleanup;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
+import de.redsix.pdfcompare.env.Environment;
 
 /**
  * Exclusions collect rectangular areas of the document, that shall be ignored
@@ -50,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * called
  * <a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>)
  * which has the following form:
- * 
+ *
  * <pre>
  * exclusions: [
  *     {
@@ -78,9 +76,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Exclusions {
 
-	private static final float CM_TO_PIXEL = 1 / 2.54f * DPI;
-	private static final float MM_TO_PIXEL = CM_TO_PIXEL / 10;
-	private static final float PT_TO_PIXEL = 300f / 72f;
+	private final int dpi;
+	private final float CM_TO_PIXEL;
+	private final float MM_TO_PIXEL;
+	private final float PT_TO_PIXEL;
 	private static final Pattern NUMBER = Pattern.compile("([0-9.]+)(cm|mm|pt)");
 	private static final ConfigParseOptions configParseOptions = ConfigParseOptions.defaults()
 			.setSyntax(ConfigSyntax.CONF).setAllowMissing(true);
@@ -99,6 +98,13 @@ public class Exclusions {
 			}
 		}
 		return this;
+	}
+
+	public Exclusions(Environment environment) {
+		this.dpi = environment.getDPI();
+		CM_TO_PIXEL = 1f / 2.54f * dpi;
+		MM_TO_PIXEL = CM_TO_PIXEL / 10f;
+		PT_TO_PIXEL = ((float) dpi) / 72f;
 	}
 
 	public PageExclusions forPage(final int page) {
@@ -130,7 +136,6 @@ public class Exclusions {
 		return t;
 	}
 
-	@SuppressWarnings("deprecation")
 	public void readExclusions(InputStream inputStream) {
 		if (inputStream != null) {
 			try {
@@ -144,14 +149,13 @@ public class Exclusions {
 	}
 
 	public void readExclusions(Reader reader) {
-		if (reader != null) {
-			final Config config = ConfigFactory.parseReader(reader, configParseOptions);
-			readFromConfig(config);
-		}
+		notNull(reader, "reader must not be null");
+		final Config exclusionConfig = ConfigFactory.parseReader(reader, configParseOptions);
+		readFromConfig(exclusionConfig);
 	}
 
 	private void readFromConfig(final Config load) {
-		final List<? extends ConfigObject> exclusions = load.getObjectList("exclusions");
+		val exclusions = load.getObjectList("exclusions");
 		for (val co : exclusions) {
 			val c = co.toConfig();
 			PageArea pa;
@@ -170,8 +174,8 @@ public class Exclusions {
 		try {
 			return c.getInt(key);
 		} catch (ConfigException.WrongType e) {
-			final String valueStr = c.getString(key);
-			final Matcher matcher = NUMBER.matcher(valueStr);
+			val valueStr = c.getString(key);
+			val matcher = NUMBER.matcher(valueStr);
 			if (matcher.matches()) {
 				float factor = 0;
 				if ("mm".equals(matcher.group(2))) {

@@ -35,6 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import lombok.Cleanup;
+import lombok.val;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -42,8 +45,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.redsix.junitextensions.TempDirectory;
 import de.redsix.junitextensions.TempDirectoryExtension;
-import lombok.Cleanup;
-import lombok.val;
 
 @ExtendWith(TempDirectoryExtension.class)
 public class IntegrationTest {

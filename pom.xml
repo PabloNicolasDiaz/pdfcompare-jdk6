@@ -27,7 +27,7 @@
 		<maven.compiler.testSource>1.8</maven.compiler.testSource>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.projectlombok.lombok.version>1.18.10</org.projectlombok.lombok.version>
-		<spotless.version>1.20.0</spotless.version>
+		<spotless.version>1.27.0</spotless.version>
 		<junit-minor.version>5.2</junit-minor.version>
 		<junit.version>5.${junit-minor.version}</junit.version>
 		<delombok.output>${project.build.directory}/generated-sources/delombok</delombok.output>
@@ -213,6 +213,7 @@
 					<execution>
 						<id>default-testCompile</id>
 						<configuration>
+							<release>${maven.compiler.testRelease}</release>
 							<showDeprecation>true</showDeprecation>
 							<showWarnings>true</showWarnings>
 						</configuration>
@@ -265,7 +266,7 @@
 						<configuration>
 							<rules>
 								<requireMavenVersion>
-									<version>3.0.5</version>
+									<version>3.1.0</version>
 								</requireMavenVersion>
 							</rules>
 						</configuration>
@@ -298,12 +299,13 @@
 							<file>${basedir}/spotless.importorder</file>
 						</importOrder>
 					</java>
-					<xml>
+					<eclipseWtp>
+						<type>XML</type>
 						<licenseHeader>
 							<file>${basedir}/spotless.license_xml</file>
 						</licenseHeader>
-						<trimTrailingWhitespace />
-					</xml>
+						<trimTrailingWhitespace />		
+					</eclipseWtp>
 				</configuration>
 			</plugin>
 		</plugins>

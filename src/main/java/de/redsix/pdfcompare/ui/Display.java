@@ -46,12 +46,13 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.WindowConstants;
 
+import lombok.val;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
 import de.redsix.pdfcompare.CompareResultWithExpectedAndActual;
 import de.redsix.pdfcompare.PdfComparator;
-import lombok.val;
 
 public class Display {
 
@@ -122,8 +123,8 @@ public class Display {
 							val passwordForActualFile = askForPassword(actualFile);
 							try {
 								frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-								val compareResult = (CompareResultWithExpectedAndActual) new PdfComparator<>(
-										expectedFile, actualFile, new CompareResultWithExpectedAndActual())
+								val compareResult = new PdfComparator<CompareResultWithExpectedAndActual>(expectedFile,
+										actualFile, new CompareResultWithExpectedAndActual())
 												.withExpectedPassword(
 														String.valueOf(passwordForExpectedFile.getPassword()))
 												.withActualPassword(String.valueOf(passwordForActualFile.getPassword()))

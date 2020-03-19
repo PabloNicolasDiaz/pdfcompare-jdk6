@@ -29,13 +29,14 @@ public class CompareResultWithExpectedAndActual extends CompareResultImpl {
 	private final Map<Integer, ImageWithDimension> expectedImages = new TreeMap<Integer, ImageWithDimension>();
 	private final Map<Integer, ImageWithDimension> actualImages = new TreeMap<Integer, ImageWithDimension>();
 
-    @Override
-    public synchronized void addPage(final PageDiffCalculator diffCalculator, final int pageIndex,
-            final ImageWithDimension expectedImage, final ImageWithDimension actualImage, final ImageWithDimension diffImage) {
-        super.addPage(diffCalculator, pageIndex, expectedImage, actualImage, diffImage);
-        expectedImages.put(pageIndex, expectedImage);
-        actualImages.put(pageIndex, actualImage);
-    }
+	@Override
+	public synchronized void addPage(final PageDiffCalculator diffCalculator, final int pageIndex,
+			final ImageWithDimension expectedImage, final ImageWithDimension actualImage,
+			final ImageWithDimension diffImage) {
+		super.addPage(diffCalculator, pageIndex, expectedImage, actualImage, diffImage);
+		expectedImages.put(pageIndex, expectedImage);
+		actualImages.put(pageIndex, actualImage);
+	}
 
 	@Override
 	protected boolean keepImages() {

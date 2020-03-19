@@ -42,14 +42,15 @@ public class TempDirectoryExtension implements AfterEachCallback, ParameterResol
 	public boolean supportsParameter(ParameterContext paramContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
 		final Parameter parameter = paramContext.getParameter();
-		return parameter.getAnnotation(TempDirectory.class) != null && Path.class.equals(parameter.getType());
+		return parameter.<TempDirectory>getAnnotation(TempDirectory.class) != null
+				&& Path.class.equals(parameter.getType());
 	}
 
 	@Override
 	public Object resolveParameter(ParameterContext paramContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
 		val parameter = paramContext.getParameter();
-		val parentPath = parameter.getAnnotation(TempDirectory.class).parentPath();
+		val parentPath = parameter.<TempDirectory>getAnnotation(TempDirectory.class).parentPath();
 		return getLocalStore(extensionContext).getOrComputeIfAbsent(KEY,
 				key -> createTempDirectory(parentPath, extensionContext));
 	}

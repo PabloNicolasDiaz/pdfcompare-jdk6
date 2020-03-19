@@ -34,15 +34,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
 import de.redsix.pdfcompare.env.DefaultEnvironment;
 import de.redsix.pdfcompare.env.Environment;
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PdfComparator<T extends CompareResultImpl> {
@@ -56,7 +57,7 @@ public class PdfComparator<T extends CompareResultImpl> {
 	private static final int MISSING_RGB = new Color(220, 0, 0).getRGB();
 	public static final int MARKER_WIDTH = 20;
 	private Environment environment;
-	private final Exclusions exclusions = new Exclusions();
+	private Exclusions exclusions;
 	private Supplier<InputStream> expectedStreamSupplier;
 	private Supplier<InputStream> actualStreamSupplier;
 	private ExecutorService drawExecutor;
@@ -67,10 +68,13 @@ public class PdfComparator<T extends CompareResultImpl> {
 	private final TimeUnit unit = TimeUnit.MINUTES;
 	private String expectedPassword = "";
 	private String actualPassword = "";
+	private boolean withIgnoreCalled = false;
 
 	private PdfComparator(T compareResult) {
 		notNull(compareResult, "compareResult is null");
 		this.compareResult = compareResult;
+		this.environment = DefaultEnvironment.create();
+		this.exclusions = new Exclusions(environment);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -153,64 +157,95 @@ public class PdfComparator<T extends CompareResultImpl> {
 		}
 	}
 
-	public void setEnvironment(Environment environment) {
-		this.environment = environment;
-	}
-	
 	/**
-     * Reads a file with Exclusions.
-     * @param ignoreFilename The file to read
-     * @return this
-     * @see PdfComparator#withIgnore(InputStream)
-     */
+	 * @deprecated use {@link #withEnvironment(Environment)} instead.
+	 */
+	@Deprecated
+	public void setEnvironment(Environment environment) {
+		withEnvironment(environment);
+	}
+
+	/**
+	 * Allows to inject an Environment that can override environment settings.
+	 * {@link de.redsix.pdfcompare.env.SimpleEnvironment} is particularly useful if
+	 * you want to override some properties.
+	 *
+	 * @param environment the environment so use
+	 * @return this
+	 * @throws IllegalStateException when withIgnore methods are called before this
+	 * method.
+	 */
+	public PdfComparator<T> withEnvironment(Environment environment) {
+		if (withIgnoreCalled) {
+			throw new IllegalStateException(
+					"withEnvironment(...) must be called before any withIgnore(...) methods are called.");
+		}
+		this.environment = environment;
+		return this;
+	}
+
+	/**
+	 * Reads a file with Exclusions.
+	 *
+	 * @param ignoreFilename The file to read
+	 * @return this
+	 * @see PdfComparator#withIgnore(InputStream)
+	 */
 	public PdfComparator<T> withIgnore(final String ignoreFilename) {
 		notNull(ignoreFilename, "ignoreFilename is null");
 		exclusions.readExclusions(ignoreFilename);
 		return this;
 	}
-	
+
 	/**
-     * Reads a file with Exclusions.
-     * @param ignoreFile The file to read
-     * @return this
-     * @see PdfComparator#withIgnore(InputStream)
-     */
+	 * Reads a file with Exclusions.
+	 *
+	 * @param ignoreFile The file to read
+	 * @return this
+	 * @see PdfComparator#withIgnore(InputStream)
+	 */
 	public PdfComparator<T> withIgnore(final File ignoreFile) {
 		notNull(ignoreFile, "ignoreFile is null");
+		withIgnoreCalled = true;
 		exclusions.readExclusions(ignoreFile);
 		return this;
 	}
-	
+
 	/**
-     * Reads a file with Exclusions.
-     *
-     * It is possible to define rectangular areas that are ignored during comparison. For that, a file needs to be created, which defines areas to ignore.
-     * The file format is JSON (or actually a superset called <a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>) and has the following form:
-     * <pre>
-     * exclusions: [
-     *     {
-     *         page: 2
-     *         x1: 300 // entries without a unit are in pixels, when Pdf is rendered at 300DPI
-     *         y1: 1000
-     *         x2: 550
-     *         y2: 1300
-     *     },
-     *     {
-     *         // page is optional. When not given, the exclusion applies to all pages.
-     *         x1: 130.5mm // entries can also be given in units of cm, mm or pt (DTP-Point defined as 1/72 Inches)
-     *         y1: 3.3cm
-     *         x2: 190mm
-     *         y2: 3.7cm
-     *     },
-     *     {
-     *         page: 7
-     *         // coordinates are optional. When not given, the whole page is excluded.
-     *     }
-     * ]</pre>
-     *
-     * @param ignoreIS The inputStream to read
-     * @return this
-     */
+	 * Reads a file with Exclusions.
+	 *
+	 * It is possible to define rectangular areas that are ignored during
+	 * comparison. For that, a file needs to be created, which defines areas to
+	 * ignore. The file format is JSON (or actually a superset called
+	 * <a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>)
+	 * and has the following form:
+	 *
+	 * <pre>
+	 * exclusions: [
+	 *     {
+	 *         page: 2
+	 *         x1: 300 // entries without a unit are in pixels, when Pdf is rendered at 300DPI
+	 *         y1: 1000
+	 *         x2: 550
+	 *         y2: 1300
+	 *     },
+	 *     {
+	 *         // page is optional. When not given, the exclusion applies to all pages.
+	 *         x1: 130.5mm // entries can also be given in units of cm, mm or pt (DTP-Point defined as 1/72 Inches)
+	 *         y1: 3.3cm
+	 *         x2: 190mm
+	 *         y2: 3.7cm
+	 *     },
+	 *     {
+	 *         page: 7
+	 *         // coordinates are optional. When not given, the whole page is excluded.
+	 *     }
+	 * ]
+	 * </pre>
+	 *
+	 * @param ignoreIS The inputStream to read
+	 * @return this
+	 */
 	public PdfComparator<T> withIgnore(final InputStream ignoreIS) {
 		notNull(ignoreIS, "ignoreIS is null");
 		exclusions.readExclusions(ignoreIS);
@@ -218,11 +253,25 @@ public class PdfComparator<T extends CompareResultImpl> {
 	}
 
 	/**
-     * Allows to specify an area of a page that is excluded during the comparison.
-     * @deprecated Use {@link PdfComparator#withIgnore(PageArea)} instead.
-     * @param exclusion An area of the document, that shall be ignored.
-     * @return this
-     */
+	 * Allows to specify an area of a page that is excluded during the comparison.
+	 *
+	 * @param exclusion An area of the document, that shall be ignored.
+	 * @return this
+	 */
+	public PdfComparator<T> withIgnore(final PageArea exclusion) {
+		notNull(exclusion, "exclusion is null");
+		withIgnoreCalled = true;
+		exclusions.add(exclusion);
+		return this;
+	}
+
+	/**
+	 * Allows to specify an area of a page that is excluded during the comparison.
+	 *
+	 * @deprecated Use {@link PdfComparator#withIgnore(PageArea)} instead.
+	 * @param exclusion An area of the document, that shall be ignored.
+	 * @return this
+	 */
 	public PdfComparator<T> with(final PageArea exclusion) {
 		notNull(exclusion, "exclusion is null");
 		exclusions.add(exclusion);
@@ -242,17 +291,13 @@ public class PdfComparator<T extends CompareResultImpl> {
 	}
 
 	private void buildEnvironment() {
-		if (environment == null) {
-			environment = DefaultEnvironment.create();
-		}
 		compareResult.setEnvironment(environment);
-
 		drawExecutor = blockingExecutor("Draw", 1, 50, environment);
 		parrallelDrawExecutor = blockingExecutor("ParallelDraw", 2, 4, environment);
 		diffExecutor = blockingExecutor("Diff", 1, 2, environment);
 	}
 
-	public CompareResult compare() throws IOException {
+	public T compare() throws IOException {
 		try {
 			if (expectedStreamSupplier == null || actualStreamSupplier == null) {
 				return compareResult;
@@ -298,10 +343,8 @@ public class PdfComparator<T extends CompareResultImpl> {
 	private void compare(final PDDocument expectedDocument, final PDDocument actualDocument) throws IOException {
 		expectedDocument.setResourceCache(new ResourceCacheWithLimitedImages(environment));
 		val expectedPdfRenderer = new PDFRenderer(expectedDocument);
-
 		actualDocument.setResourceCache(new ResourceCacheWithLimitedImages(environment));
 		val actualPdfRenderer = new PDFRenderer(actualDocument);
-
 		val minPageCount = Math.min(expectedDocument.getNumberOfPages(), actualDocument.getNumberOfPages());
 		val latch = new CountDownLatch(minPageCount);
 		for (int pageIndex = 0; pageIndex < minPageCount; pageIndex++) {
@@ -326,25 +369,22 @@ public class PdfComparator<T extends CompareResultImpl> {
 			public void run() {
 				try {
 					log.trace("Drawing page {}", pageIndex);
-					val expectedImageFuture = parrallelDrawExecutor
-							.submit(new Callable<ImageWithDimension>() {
-								@Override
-								public ImageWithDimension call() throws Exception {
-									return renderPageAsImage(expectedDocument, expectedPdfRenderer, pageIndex);
-								}
-							});
-					val actualImageFuture = parrallelDrawExecutor
-							.submit(new Callable<ImageWithDimension>() {
-								@Override
-								public ImageWithDimension call() throws Exception {
-									return renderPageAsImage(actualDocument, actualPdfRenderer, pageIndex);
-								}
-							});
-					val expectedImage = getImage(expectedImageFuture, pageIndex,
-							"expected document");
+					val expectedImageFuture = parrallelDrawExecutor.submit(new Callable<ImageWithDimension>() {
+						@Override
+						public ImageWithDimension call() throws Exception {
+							return renderPageAsImage(expectedDocument, expectedPdfRenderer, pageIndex, environment);
+						}
+					});
+					val actualImageFuture = parrallelDrawExecutor.submit(new Callable<ImageWithDimension>() {
+						@Override
+						public ImageWithDimension call() throws Exception {
+							return renderPageAsImage(actualDocument, actualPdfRenderer, pageIndex, environment);
+						}
+					});
+					val expectedImage = getImage(expectedImageFuture, pageIndex, "expected document");
 					val actualImage = getImage(actualImageFuture, pageIndex, "actual document");
-					val diffImage = new DiffImage(expectedImage, actualImage, pageIndex, environment,
-							exclusions, compareResult);
+					val diffImage = new DiffImage(expectedImage, actualImage, pageIndex, environment, exclusions,
+							compareResult);
 					log.trace("Enqueueing page {}.", pageIndex);
 					diffExecutor.execute(new Runnable() {
 						@Override
@@ -389,7 +429,7 @@ public class PdfComparator<T extends CompareResultImpl> {
 	private void addExtraPages(final PDDocument document, final PDFRenderer pdfRenderer, final int minPageCount,
 			final int color, final boolean expected) throws IOException {
 		for (int pageIndex = minPageCount; pageIndex < document.getNumberOfPages(); pageIndex++) {
-			val image = renderPageAsImage(document, pdfRenderer, pageIndex);
+			val image = renderPageAsImage(document, pdfRenderer, pageIndex, environment);
 			val dataBuffer = image.bufferedImage.getRaster().getDataBuffer();
 			for (int i = 0; i < image.bufferedImage.getWidth() * MARKER_WIDTH; i++) {
 				dataBuffer.setElem(i, color);
@@ -413,8 +453,8 @@ public class PdfComparator<T extends CompareResultImpl> {
 	}
 
 	public static ImageWithDimension renderPageAsImage(final PDDocument document, final PDFRenderer expectedPdfRenderer,
-			final int pageIndex) throws IOException {
-		val bufferedImage = expectedPdfRenderer.renderImageWithDPI(pageIndex, DPI);
+			final int pageIndex, final Environment environment) throws IOException {
+		val bufferedImage = expectedPdfRenderer.renderImageWithDPI(pageIndex, environment.getDPI());
 		val page = document.getPage(pageIndex);
 		val mediaBox = page.getMediaBox();
 		if (page.getRotation() == 90 || page.getRotation() == 270)
