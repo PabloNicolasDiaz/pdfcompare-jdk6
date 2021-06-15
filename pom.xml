@@ -31,7 +31,7 @@
 		<junit-minor.version>5.2</junit-minor.version>
 		<junit.version>5.${junit-minor.version}</junit.version>
 		<delombok.output>${project.build.directory}/generated-sources/delombok</delombok.output>
-		<org.apache.pdfbox.version>2.0.18</org.apache.pdfbox.version>
+		<org.apache.pdfbox.version>2.0.24</org.apache.pdfbox.version>
 		<com.typesafe.config.version>1.2.1</com.typesafe.config.version>
 		<org.slf4j.version>1.7.30</org.slf4j.version>
 		<org.mockito.version>3.2.4</org.mockito.version>
